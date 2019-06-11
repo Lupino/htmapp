@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from aio_periodic import open_connection, Worker, Client, Job
 import json
 
-from config import model_root, periodic, max_process, parameters
+from config import model_root, periodic, max_thread, parameters
 
 cache = Cache()
 
@@ -108,7 +108,7 @@ def runHotgym(loop, executor, client):
 
     return run
 
-async def main(loop, executor):
+async def main(loop, executor, specid):
     client = Client(loop)
     reader, writer = await open_connection(periodic)
     await client.connect(reader, writer)
@@ -117,17 +117,21 @@ async def main(loop, executor):
     reader, writer = await open_connection(periodic)
     await worker.connect(reader, writer)
 
-    await worker.add_func('run-hotgym', runHotgym(loop, executor, client))
-    await worker.add_func('create-hotgym', createHotgym(loop, executor))
-    await worker.add_func('save-all-model', runSaveAllModel(loop, executor, cache.get_items))
-    await worker.add_func('save-all-old-model', runSaveAllModel(loop, executor, cache.get_saves))
-    worker.work(max_process)
+    await worker.add_func('run-hotgym-%s'%specid, runHotgym(loop, executor, client))
+    await worker.add_func('create-hotgym-%s'%specid, createHotgym(loop, executor))
+    await worker.add_func('save-all-model-%s'%specid, runSaveAllModel(loop, executor, cache.get_items))
+    await worker.add_func('save-all-old-model-%s'%specid, runSaveAllModel(loop, executor, cache.get_saves))
+    worker.work(max_thread)
 
-def start():
+def start(specid='1'):
     loop = asyncio.get_event_loop()
-    executor = ThreadPoolExecutor(max_process)
-    loop.create_task(main(loop, executor))
+    executor = ThreadPoolExecutor(max_thread)
+    loop.create_task(main(loop, executor, specid))
     loop.run_forever()
 
 if __name__ == '__main__':
-    start()
+    import sys
+    specid = '1'
+    if len(sys.argv) > 1:
+        specid = sys.argv[1]
+    start(specid)

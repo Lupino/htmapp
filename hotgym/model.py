@@ -1,5 +1,5 @@
-from nupic.bindings.algorithms import SpatialPooler
-from nupic.bindings.algorithms import TemporalMemory
+from nupic.algorithms import SpatialPooler
+from nupic.algorithms import TemporalMemory
 from nupic.bindings.sdr import SDR, Metrics
 from nupic.encoders.rdse import RDSE, RDSE_Parameters
 from nupic.encoders.date import DateEncoder

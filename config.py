@@ -1,6 +1,6 @@
 model_root='models'
 periodic='tcp://127.0.0.1:5000'
-max_process=4
+max_thread=2
 
 parameters = {
  'enc': {'resolution': 0.9551003024002529,
