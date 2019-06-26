@@ -2,6 +2,7 @@ import asyncio
 from aio_periodic import open_connection, Client, Job
 import config
 import json
+import sys
 
 import csv
 import datetime
@@ -12,13 +13,13 @@ import random
 _EXAMPLE_DIR = os.path.dirname(os.path.abspath(__file__))
 _INPUT_FILE_PATH = os.path.join(_EXAMPLE_DIR, "gymdata.csv")
 
-async def main(loop):
+async def main(loop, specid):
     client = Client(loop)
     reader, writer = await open_connection(config.periodic)
     await client.connect(reader, writer)
     async def submit(data):
         name = '{name}{timestamp}{value}'.format(**data)
-        job = Job('run-hotgym', name, bytes(json.dumps(data), 'utf-8'), timeout=3600)
+        job = Job('run-hotgym-%s'%specid, name, bytes(json.dumps(data), 'utf-8'), timeout=3600)
         v = await client.submit_job(job)
         print(v)
 
@@ -43,4 +44,8 @@ async def main(loop):
         await submit({'name': 'test', 'timestamp': dateString.timestamp(), 'value': consumption})
 
 loop = asyncio.get_event_loop()
-loop.run_until_complete(main(loop))
+
+specid = '1'
+if len(sys.argv) > 1:
+    specid = sys.argv[1]
+loop.run_until_complete(main(loop, specid))
