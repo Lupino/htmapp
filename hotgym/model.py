@@ -4,6 +4,8 @@ from htm.bindings.sdr import SDR, Metrics
 from htm.encoders.rdse import RDSE, RDSE_Parameters
 from htm.encoders.date import DateEncoder
 from htm.algorithms.anomaly_likelihood import AnomalyLikelihood
+from htm.bindings.algorithms import Predictor
+import numpy as np
 
 def createEncoder(parameters):
     model = {}
@@ -66,8 +68,19 @@ def createModel(parameters):
     )
     model['tm'] = tm
 
+    model.update(createOther(parameters))
+
+    return model
+
+def createOther(parameters):
+    model = {}
     anomaly_history = AnomalyLikelihood()
     model['anomaly_history'] = anomaly_history
+    predictor = Predictor( steps=[1, 5], alpha=parameters['sdrc_alpha'] )
+    predictor_resolution = 1
+    model['predictor'] = predictor
+    model['predictor_resolution'] = predictor_resolution
+    model['count'] = 0
 
     return model
 
@@ -93,9 +106,26 @@ def runModel(model, dateString, consumption):
     # Execute Temporal Memory algorithm over active mini-columns.
     model['tm'].compute(activeColumns, learn=True)
 
-    # anomalyLikelihood = model['anomaly_history'].anomalyProbability( consumption, model['tm'].anomaly )
-    return model['tm'].anomaly
-    # return anomalyLikelihood
+    # Predict what will happen, and then train the predictor based on what just happened.
+    pdf = model['predictor'].infer( model['count'], model['tm'].getActiveCells() )
+
+    predict_value = 0
+    if pdf[1]:
+        predict_value = np.argmax(pdf[1]) * model['predictor_resolution']
+
+    model['predictor'].learn( model['count'], model['tm'].getActiveCells(),
+                              int(consumption / model['predictor_resolution']))
+
+    model['count'] = model['count'] + 1
+
+
+    anomalyLikelihood = model['anomaly_history'].anomalyProbability( consumption, model['tm'].anomaly )
+
+    return {
+        'perdict': predict_value,
+        'anomaly': model['tm'].anomaly,
+        'anomalyProb': anomalyLikelihood
+    }
 
 def saveModel(store, model):
     print('saveModel')
@@ -110,4 +140,6 @@ def prepareModel(model, parameters):
         return None
 
     model.update(createEncoder(parameters))
+    model.update(createOther(parameters))
+
     return model
