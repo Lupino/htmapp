@@ -63,11 +63,9 @@ def doRunHotgym(item, data):
     dateString = datetime.fromtimestamp(data['timestamp'])
     # Convert data value string into float.
     v = runModel(model, dateString, data['value'])
-    print(item.get_name(), item.get_timestamp(), data, v)
-    # saveModel(store, model)
-    # item.model['sp'] = sp
-    # item.model['tm'] = sm
-    return v
+    data.update(v)
+    print(data)
+    return data
 
 
 def runHotgym(loop, executor, client):
