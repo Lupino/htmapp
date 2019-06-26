@@ -1,9 +1,9 @@
-from nupic.algorithms import SpatialPooler
-from nupic.algorithms import TemporalMemory
-from nupic.bindings.sdr import SDR, Metrics
-from nupic.encoders.rdse import RDSE, RDSE_Parameters
-from nupic.encoders.date import DateEncoder
-from nupic.algorithms.anomaly_likelihood import AnomalyLikelihood
+from htm.algorithms import SpatialPooler
+from htm.algorithms import TemporalMemory
+from htm.bindings.sdr import SDR, Metrics
+from htm.encoders.rdse import RDSE, RDSE_Parameters
+from htm.encoders.date import DateEncoder
+from htm.algorithms.anomaly_likelihood import AnomalyLikelihood
 
 def createEncoder(parameters):
     model = {}
