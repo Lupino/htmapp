@@ -77,7 +77,7 @@ class Model:
             raise Exception('Load SpatialPooler failed')
 
         if not isinstance(model.get('tm'), TemporalMemory):
-            raise Exception('Load SpatialPooler failed')
+            raise Exception('Load TemporalMemory failed')
 
         self.sp = model['sp']
         self.tm = model['tm']
