@@ -1,7 +1,7 @@
 from datetime import datetime
 from .store import Store
 from .cache import Cache, CacheItem
-from .model import createModel, runModel, saveModel, prepareModel
+from .model import Model
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from aio_periodic import open_connection, Worker, Client, Job
@@ -14,15 +14,15 @@ cache = Cache()
 def doLoadModel(item):
     print('doLoadModel')
     store = Store('{}/{}'.format(model_root, item.get_name()))
-    model = store.load(item.get_model_name())
-    model = prepareModel(model, parameters)
+    model = Model(parameters)
+    model.load(store)
     item.set_model(model)
     print('model is loaded')
 
 def doSaveModel(item):
     print('doSaveModel')
     store = Store('{}/{}'.format(model_root, item.get_name()))
-    saveModel(store, item.get_model())
+    item.get_model().save(store)
 
 def runSaveAllModel(loop, executor, func=cache.get_items):
     async def run(job):
@@ -40,8 +40,9 @@ def runSaveAllModel(loop, executor, func=cache.get_items):
 
 def doCreateHotgym(name):
     store = Store('{}/{}'.format(model_root, name))
-    model = createModel(parameters)
-    saveModel(store, model)
+    model = Model(parameters)
+    model.create()
+    model.save(store)
 
 def createHotgym(loop, executor):
     async def run(job):
@@ -62,7 +63,7 @@ def doRunHotgym(item, data):
     # Convert data string into Python date object.
     dateString = datetime.fromtimestamp(data['timestamp'])
     # Convert data value string into float.
-    v = runModel(model, dateString, data['value'])
+    v = model.run(dateString, data['value'])
     data.update(v)
     print(data)
     return data
