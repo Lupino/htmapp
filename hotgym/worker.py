@@ -9,18 +9,24 @@ import json
 
 from config import model_root, periodic, max_thread, parameters
 
+import logging
+
+logger = logging.getLogger('hotgym.worker')
+
 cache = Cache()
 
+locker = asyncio.Lock()
+
 def doLoadModel(item):
-    print('doLoadModel')
+    logger.info('doLoadModel ' + item.get_name())
     store = Store('{}/{}'.format(model_root, item.get_name()))
     model = Model(parameters)
     model.load(store)
     item.set_model(model)
-    print('model is loaded')
+    logger.info('model is loaded')
 
 def doSaveModel(item):
-    print('doSaveModel')
+    logger.info('doSaveModel ' + item.get_name())
     store = Store('{}/{}'.format(model_root, item.get_name()))
     item.get_model().save(store)
 
@@ -35,7 +41,9 @@ def runSaveAllModel(loop, executor, func=cache.get_items):
                 await asyncio.wait(tasks)
             await job.done()
 
-        await job.with_lock('saveModel', 1, run_)
+        async with locker:
+            await run_()
+
     return run
 
 def doCreateHotgym(name):
@@ -51,7 +59,7 @@ def createHotgym(loop, executor):
         await asyncio.wait([task])
         exception = task.exception()
         if exception:
-            print(exception)
+            logger.exception(exception)
             await job.fail()
         else:
             await job.done()
@@ -59,23 +67,25 @@ def createHotgym(loop, executor):
     return run
 
 def doRunHotgym(item, data):
-    model = item.get_model()
-    # Convert data string into Python date object.
-    dateString = datetime.fromtimestamp(data['timestamp'])
-    # Convert data value string into float.
-    v = model.run(dateString, data['value'])
-    data.update(v)
-    print(data)
+    try:
+        model = item.get_model()
+        # Convert data string into Python date object.
+        dateString = datetime.fromtimestamp(data['timestamp'])
+        # Convert data value string into float.
+        v = model.run(dateString, data['value'])
+        data.update(v)
+    except Exception as e:
+        logger.exception(e)
     return data
 
 
-def runHotgym(loop, executor, client):
+def runHotgym(loop, executor, client, specid='1'):
     async def run(job):
         data = {}
         try:
             data = json.loads(str(job.workload, 'utf-8'))
         except Exception as e:
-            print(e)
+            logger.exception(e)
             return await job.done()
 
         name = data.get('name', job.name)
@@ -94,13 +104,13 @@ def runHotgym(loop, executor, client):
             await asyncio.wait([task])
             exception = task.exception()
             if exception:
-                print(exception)
+                logger.exception(exception)
                 await job.fail()
             else:
                 await job.done(task.result())
 
             if len(cache.saves) > 0:
-                job1 = Job('save-all-old-model', "save", timeout=3600)
+                job1 = Job('save-all-old-model-%s'%specid, "save", timeout=3600)
                 await client.submit_job(job1)
 
         await job.with_lock(name, 1, _run)
@@ -116,7 +126,7 @@ async def main(loop, executor, specid):
     reader, writer = await open_connection(periodic)
     await worker.connect(reader, writer)
 
-    await worker.add_func('run-hotgym-%s'%specid, runHotgym(loop, executor, client))
+    await worker.add_func('run-hotgym-%s'%specid, runHotgym(loop, executor, client, specid))
     await worker.add_func('create-hotgym-%s'%specid, createHotgym(loop, executor))
     await worker.add_func('save-all-model-%s'%specid, runSaveAllModel(loop, executor, cache.get_items))
     await worker.add_func('save-all-old-model-%s'%specid, runSaveAllModel(loop, executor, cache.get_saves))
