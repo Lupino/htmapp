@@ -19,9 +19,8 @@ async def main(loop, specid):
     await client.connect(reader, writer)
     async def submit(data):
         name = '{name}{timestamp}{value}'.format(**data)
-        job = Job('run-hotgym-%s'%specid, name, bytes(json.dumps(data), 'utf-8'), timeout=3600)
+        job = Job('run-hotgym-%s'%specid, name, bytes(json.dumps(data), 'utf-8'), timeout=30)
         v = await client.submit_job(job)
-        print(v)
 
     # Read the input file.
     records = []
