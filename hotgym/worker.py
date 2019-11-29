@@ -119,18 +119,15 @@ def runHotgym(loop, executor, client, specid='1'):
 
 async def main(loop, executor, specid):
     client = Client(loop)
-    reader, writer = await open_connection(periodic)
-    await client.connect(reader, writer)
+    await client.connect(open_connection, periodic)
 
     worker = Worker(loop)
-    reader, writer = await open_connection(periodic)
-    await worker.connect(reader, writer)
-
+    await worker.connect(open_connection, periodic)
     await worker.add_func('run-hotgym-%s'%specid, runHotgym(loop, executor, client, specid))
     await worker.add_func('create-hotgym-%s'%specid, createHotgym(loop, executor))
     await worker.add_func('save-all-model-%s'%specid, runSaveAllModel(loop, executor, cache.get_items))
     await worker.add_func('save-all-old-model-%s'%specid, runSaveAllModel(loop, executor, cache.get_saves))
-    worker.work(max_thread)
+    await worker.work(max_thread)
 
 def start(specid='1'):
     loop = asyncio.get_event_loop()

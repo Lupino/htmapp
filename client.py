@@ -15,8 +15,7 @@ _INPUT_FILE_PATH = os.path.join(_EXAMPLE_DIR, "gymdata.csv")
 
 async def main(loop, specid):
     client = Client(loop)
-    reader, writer = await open_connection(config.periodic)
-    await client.connect(reader, writer)
+    await client.connect(open_connection, "tcp://:5000")
     async def submit(data):
         name = '{name}{timestamp}{value}'.format(**data)
         job = Job('run-hotgym-%s'%specid, name, bytes(json.dumps(data), 'utf-8'), timeout=30)
