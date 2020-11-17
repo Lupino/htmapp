@@ -5,11 +5,13 @@ import pickle
 import glob
 import snappy
 
+
 def safe_float(v):
     try:
         return float(v)
-    except:
+    except Exception:
         return 0
+
 
 class Store(object):
     def __init__(self, checkpoint, generation=2, compress=True):
@@ -50,13 +52,14 @@ class Store(object):
         with open(self.get_commit_file_name(trans['name']), 'w') as f:
             f.write(trans['commit_id'])
 
-        self.remove_old_file();
+        self.remove_old_file()
 
     def get_commit_file_name(self, name):
         return '{}/checkpoint-{}'.format(self.checkpoint, name)
 
     def get_file_name(self, trans):
-        return '{}/checkpoint-{}-{}'.format(self.checkpoint, trans['name'], trans['commit_id'])
+        return '{}/checkpoint-{}-{}'.format(self.checkpoint, trans['name'],
+                                            trans['commit_id'])
 
     def save(self, name, obj):
         trans = self.start_transaction(name)

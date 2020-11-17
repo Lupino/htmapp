@@ -1,7 +1,8 @@
 import time
 
+
 class CacheItem(object):
-    def __init__(self, name, model = None):
+    def __init__(self, name, model=None):
         self.name = name
         self.model = model
         self.timestamp = time.time()
@@ -22,6 +23,7 @@ class CacheItem(object):
     def set_model(self, model):
         self.model = model
         self.timestamp = time.time()
+
 
 class Cache(object):
     def __init__(self, size=10):
