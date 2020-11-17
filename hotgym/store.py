@@ -12,9 +12,10 @@ def safe_float(v):
         return 0
 
 class Store(object):
-    def __init__(self, checkpoint, generation=2):
+    def __init__(self, checkpoint, generation=2, compress=True):
         self.checkpoint = checkpoint
         self.generation = generation
+        self.compress = compress
 
         if not os.path.isdir(checkpoint):
             os.makedirs(checkpoint)
@@ -62,7 +63,9 @@ class Store(object):
         try:
             with open(self.get_file_name(trans), 'wb') as f:
                 data = pickle.dumps(obj)
-                f.write(snappy.compress(data))
+                if self.compress:
+                    data = snappy.compress(data)
+                f.write(data)
         finally:
             self.commit(trans)
 
@@ -84,4 +87,6 @@ class Store(object):
 
         with open(fn, 'rb') as f:
             data = f.read()
-            return pickle.loads(snappy.uncompress(data))
+            if self.compress:
+                data = snappy.uncompress(data)
+            return pickle.loads(data)
