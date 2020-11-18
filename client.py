@@ -15,10 +15,9 @@ _INPUT_FILE_PATH = os.path.join(_EXAMPLE_DIR, "gymdata.csv")
 
 async def main():
     client = Client()
-    await client.connect(open_connection, "tcp://:5000")
+    await client.connect(open_connection, config.periodic_port)
     async def submit(data):
         name = '{name}{timestamp}{value}'.format(**data)
-        job = Job('hotgym', name, bytes(json.dumps(data), 'utf-8'), timeout=30)
         print('start {}'.format(name))
         try:
             v = await client.run_job('hotgym', name, bytes(json.dumps(data), 'utf-8'), timeout=30)
