@@ -20,8 +20,12 @@ async def main(prefix=''):
         name = '{name}{timestamp}{value}'.format(**data)
         try:
             v = await client.run_job(prefix + 'hotgym', name, bytes(json.dumps(data), 'utf-8'), timeout=30)
-            data = json.loads(str(v, 'utf-8'))
-            print('value={} anomaly={}'.format(data['value'], data['anomaly']))
+            try:
+                data = json.loads(str(v, 'utf-8'))
+                print('value={} anomaly={}'.format(data['value'], data['anomaly']))
+            except Exception:
+                print(v)
+
         except Exception as e:
             print(e)
             await asyncio.sleep(10)
