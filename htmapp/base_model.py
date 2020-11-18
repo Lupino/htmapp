@@ -12,7 +12,7 @@ class BaseModel(object):
         self.initialized = False
         self.checkpoint = checkpoint
         self.last_save_time = 0
-        self.save_delay = 10  # 超过一定时间，自动保存 model
+        self.save_delay = 300  # 超过一定时间，自动保存 model
         self._cache = cache
         self._cache_item = None
 
