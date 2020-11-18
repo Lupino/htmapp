@@ -13,13 +13,19 @@ import random
 _EXAMPLE_DIR = os.path.dirname(os.path.abspath(__file__))
 _INPUT_FILE_PATH = os.path.join(_EXAMPLE_DIR, "gymdata.csv")
 
-async def main(loop, specid):
-    client = Client(loop)
+async def main():
+    client = Client()
     await client.connect(open_connection, "tcp://:5000")
     async def submit(data):
         name = '{name}{timestamp}{value}'.format(**data)
-        job = Job('run-hotgym-%s'%specid, name, bytes(json.dumps(data), 'utf-8'), timeout=30)
-        v = await client.submit_job(job)
+        job = Job('hotgym', name, bytes(json.dumps(data), 'utf-8'), timeout=30)
+        print('start {}'.format(name))
+        try:
+            v = await client.run_job('hotgym', name, bytes(json.dumps(data), 'utf-8'), timeout=30)
+            print('end {} {}'.format(name, v))
+        except Exception as e:
+            print(e)
+            await asyncio.sleep(10)
 
     # Read the input file.
     records = []
@@ -40,10 +46,3 @@ async def main(loop, specid):
         consumption = float(record[1])
 
         await submit({'name': 'test', 'timestamp': dateString.timestamp(), 'value': consumption})
-
-loop = asyncio.get_event_loop()
-
-specid = '1'
-if len(sys.argv) > 1:
-    specid = sys.argv[1]
-loop.run_until_complete(main(loop, specid))
