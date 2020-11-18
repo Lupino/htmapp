@@ -53,8 +53,10 @@ async def main(*tasks):
     size = 10
     enabled_tasks = []
     for task in tasks:
-        if task.isdigit():
-            size = int(task)
+        if task.startswith('--size='):
+            size = int(task.lstrip('--size='))
+        elif task.startswith('--prefix='):
+            worker.set_prefix(task.lstrip('--prefix='))
         else:
             enabled_tasks.append(task)
 
