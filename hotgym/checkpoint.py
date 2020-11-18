@@ -1,3 +1,4 @@
+import os
 import os.path
 from time import time
 import glob
@@ -44,14 +45,21 @@ class CheckPoint(object):
         with open(self.checkpoint_path, 'w') as f:
             f.write(checkpoint)
 
+    def _get_parameters_path(self):
+        return '{}/parameters.json'.format(self.checkpoint)
+
     def set_default_parameters(self, parameters):
-        path = '{}/parameters.json'.format(self.checkpoint)
+        path = self._get_parameters_path()
         if not os.path.isfile(path):
-            with open(path, 'w') as f:
-                json.dump(parameters, f, indent=2)
+            self.set_parameters(parameters)
+
+    def set_parameters(self, parameters):
+        path = self._get_parameters_path()
+        with open(path, 'w') as f:
+            json.dump(parameters, f, indent=2)
 
     def get_parameters(self):
-        path = '{}/parameters.json'.format(self.checkpoint)
+        path = self._get_parameters_path()
         if not os.path.isfile(path):
             return None
 
@@ -104,3 +112,9 @@ class CheckPoint(object):
                 return pickle.loads(data)
         except Exception:
             return None
+
+    def reset(self):
+        files = glob.glob('{}/checkpoint-*'.format(self.checkpoint))
+
+        for file in files:
+            os.remove(file)

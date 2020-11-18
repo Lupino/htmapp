@@ -58,3 +58,8 @@ class Cache(object):
                 return item
 
         return None
+
+    def remove(self, name):
+        item = CacheItem(name)
+        if item in self.items:
+            self.items.remove(item)

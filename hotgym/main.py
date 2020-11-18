@@ -6,6 +6,7 @@ from .base_model import run
 import time
 import os
 import argparse
+import asyncio
 
 import json
 
@@ -22,24 +23,48 @@ worker = Worker()
 run_forever = True
 
 
-@worker.func('hotgym')
-async def run_hotgym(job):
-    data = {}
-    try:
-        data = json.loads(str(job.workload, 'utf-8'))
-    except Exception as e:
-        logger.exception(e)
-        return await job.done()
+def prepare(func):
+    async def _prepare(job):
+        data = {}
+        try:
+            data = json.loads(str(job.workload, 'utf-8'))
+        except Exception as e:
+            logger.exception(e)
+            return await job.done()
 
+        name = data.get('name', job.name)
+
+        checkpoint = CheckPoint(os.path.join(model_root, name))
+        checkpoint.set_default_parameters(parameters)
+
+        retval = None
+        if asyncio.iscoroutinefunction(func):
+            retval = await func(name, checkpoint, data)
+        else:
+            retval = func(name, checkpoint, data)
+
+        await job.done(retval)
+
+    return _prepare
+
+
+@worker.func('set_parameters')
+@prepare
+def run_set_parameters(name, checkpoint, parameters):
+    checkpoint.set_parameters(parameters)
+    cache.remove(name)
+    checkpoint.reset()
+
+
+@worker.func('hotgym')
+@prepare
+def run_hotgym(name, checkpoint, data):
     consumption = data.get('value')
     if consumption is None:
-        return await job.done()
+        return data
 
-    name = data.get('name', job.name)
     timestamp = data.get('timestamp', int(time.time()))
 
-    checkpoint = CheckPoint(os.path.join(model_root, name))
-    checkpoint.set_default_parameters(parameters)
     model = HotGymModel(name, checkpoint, cache)
 
     v = run(model, timestamp, float(consumption))
@@ -47,7 +72,7 @@ async def run_hotgym(job):
     if v:
         data.update(v)
 
-    await job.done(data)
+    return data
 
 
 def parse_args(argv):
