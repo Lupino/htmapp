@@ -1,5 +1,6 @@
 import asyncio
 from importlib import import_module
+import os
 import os.path
 import argparse
 from multiprocessing import Process
@@ -8,6 +9,8 @@ import logging
 formatter = "[%(asctime)s] %(name)s {%(filename)s:%(lineno)d} %(levelname)s"
 formatter += " - %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=formatter)
+
+logger = logging.getLogger(__name__)
 
 
 def fixed_module_name(module_name):
@@ -23,9 +26,12 @@ def fixed_module_name(module_name):
     return module_name
 
 
-def start(module_name, argv):
-    print('Start running module', module_name)
+def start(module_name, argv, process_id=None):
+    logger.info('Start running module {}'.format(module_name))
     module = import_module(fixed_module_name(module_name))
+
+    if process_id is not None:
+        os.environ['PROCESS_ID'] = str(process_id)
 
     if hasattr(module, 'parse_args'):
         argv = [module.parse_args(argv)]
@@ -42,7 +48,7 @@ def start(module_name, argv):
             loop.run_until_complete(task)
     else:
         module.main(*argv)
-    print('Finish running module', module_name)
+    logger.info('Finish running module {}'.format(module_name))
 
 
 def main(script, *argv):
@@ -63,23 +69,33 @@ def main(script, *argv):
     is_module_argv = False
     module_argv = []
 
-    for arg in argv:
-        if arg.startswith('-') and not is_module_argv:
-            script_argv.append(arg)
-        else:
-            is_module_argv = True
-            module_argv.append(arg)
+    argv = list(argv)
+    argv.reverse()
 
-    if len(module_argv) > 0:
-        script_argv.append(module_argv[0])
-        module_argv = module_argv[1:]
+    while True:
+        if len(argv) == 0:
+            break
+
+        arg = argv.pop()
+
+        if is_module_argv:
+            module_argv.append(arg)
+        else:
+            script_argv.append(arg)
+            if arg.startswith('-'):
+                if arg.find('=') == -1:
+                    script_argv.append(argv.pop())
+
+            else:
+                is_module_argv = True
 
     args = parser.parse_args(script_argv)
 
     if args.processes > 1:
         processes = []
         for i in range(args.processes):
-            p = Process(target=start, args=(args.module_name, module_argv))
+            p = Process(target=start,
+                        args=(args.module_name, module_argv, i + 1))
             p.start()
             processes.append(p)
 

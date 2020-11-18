@@ -138,7 +138,15 @@ async def main(args):
 
     executor = ThreadPoolExecutor(args.size)
 
-    worker.set_prefix(args.prefix)
+    prefix = args.prefix
+
+    if 'PROCESS_ID' in os.environ:
+        if prefix.find('{}') > -1:
+            prefix = prefix.format(os.environ['PROCESS_ID'])
+        else:
+            prefix += '{}_'.format(os.environ['PROCESS_ID'])
+
+    worker.set_prefix(prefix)
     worker.set_enable_tasks(args.enabled_tasks)
 
     await worker.connect(open_connection, periodic_port)
