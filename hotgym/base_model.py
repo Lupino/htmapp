@@ -3,10 +3,10 @@ import time
 
 
 class BaseModel(object):
-    def __init__(self, name, store, cache=None):
+    def __init__(self, name, checkpoint, cache=None):
         self.name = name
         self.initialized = False
-        self._store = store
+        self._checkpoint = checkpoint
         self.last_save_time = 0
         self.save_delay = 10  # 超过一定时间，自动保存 model
         self._cache = cache
@@ -35,7 +35,7 @@ class BaseModel(object):
 
     def save(self):
         obj = self.prepare_save()
-        self._store.save(self.name, obj)
+        self._checkpoint.save(obj)
         self.last_save_time = time.time()
 
     def auto_save(self):
@@ -54,7 +54,7 @@ class BaseModel(object):
                 self._cache_item = item
                 return True
 
-        model = self._store.load(self.name)
+        model = self._checkpoint.load()
         if model is None:
             return False
 
@@ -90,7 +90,7 @@ class BaseModel(object):
 
 
 def run(model, *args, **kwargs):
-    if not model.initialized():
+    if not model.initialize():
         return None
 
-    model.run(*args, **kwargs)
+    return model.run(*args, **kwargs)
