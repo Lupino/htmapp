@@ -14,7 +14,7 @@ import logging
 
 logger = logging.getLogger('hotgym.main')
 
-cache = Cache()
+cache = Cache(checkpoint_root=model_root)
 
 worker = Worker()
 

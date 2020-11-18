@@ -1,4 +1,5 @@
 import time
+from .checkpoint import CheckPoint
 
 
 class CacheItem(object):
@@ -26,10 +27,10 @@ class CacheItem(object):
 
 
 class Cache(object):
-    def __init__(self, size=10):
+    def __init__(self, size=10, checkpoint_root=None):
         self.size = size
         self.items = []
-        self.saves = []
+        self.checkpoint_root = checkpoint_root
 
     def set(self, new):
         for item in self.items:
@@ -40,7 +41,14 @@ class Cache(object):
 
         if len(self.items) > self.size:
             items = sorted(self.items, key=lambda x: x.timestamp)
-            self.saves.append(items[0])
+
+            if self.checkpoint_root is not None:
+                item = items[0]
+                name = item.get_name()
+                model = item.get_model()
+                chk = CheckPoint(os.path.join(self.checkpoint_root, name))
+                chk.save(model)
+
             self.items.remove(items[0])
 
     def get(self, name):
@@ -49,11 +57,3 @@ class Cache(object):
                 return item
 
         return None
-
-    def get_items(self):
-        return self.items
-
-    def get_saves(self):
-        saves = self.saves[:]
-        self.saves = []
-        return saves
