@@ -71,6 +71,13 @@ def run_set_parameters(name, checkpoint, parameters):
     checkpoint.reset()
 
 
+@worker.func('set_save_delay')
+@prepare
+def run_set_parameters(name, checkpoint, data):
+    with HotGymModel(name, checkpoint, cache) as model:
+        model.set_save_delay(data['save_delay'])
+
+
 @worker.func('hotgym')
 @prepare
 @run_on_executer
