@@ -9,6 +9,7 @@ import datetime
 import os
 import numpy as np
 import random
+from htmapp.utils import get_nodes
 
 from uhashring import HashRing
 
@@ -20,17 +21,16 @@ async def main():
     client = Client()
     await client.connect(open_connection, config.periodic_port)
 
-    st = await client.status()
+    hr = await get_nodes(client)
+    model_name = 'test'
+    func = hr.get_node(model_name)
 
-    funcs = [k for k in st.keys() if k.find('hotgym') > -1]
-
-    hr = HashRing(funcs, hash_fn='ketama')
+    await client.run_job(func.format('reset_model'), 'test')
 
     async def submit(data):
         name = '{name}{timestamp}{value}'.format(**data)
         try:
-            func = hr.get_node(data['name'])
-            v = await client.run_job(func,
+            v = await client.run_job(func.format('hotgym'),
                                      name,
                                      bytes(json.dumps(data), 'utf-8'),
                                      timeout=30)
@@ -64,7 +64,7 @@ async def main():
         consumption = float(record[1])
 
         await submit({
-            'name': 'test',
+            'name': model_name,
             'timestamp': dateString.timestamp(),
             'value': consumption
         })

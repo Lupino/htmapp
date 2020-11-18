@@ -5,15 +5,21 @@ import json
 from time import time
 import psutil
 
+from htmapp.utils import get_nodes
 
-async def main(prefix=''):
+
+async def main():
     client = Client()
     await client.connect(open_connection, config.periodic_port)
+
+    hr = await get_nodes(client)
+    model_name = 'cpu'
+    func = hr.get_node(model_name)
 
     async def submit(data):
         name = '{name}{timestamp}{value}'.format(**data)
         try:
-            v = await client.run_job(prefix + 'hotgym',
+            v = await client.run_job(func.format('hotgym'),
                                      name,
                                      bytes(json.dumps(data), 'utf-8'),
                                      timeout=30)
@@ -34,7 +40,7 @@ async def main(prefix=''):
     while True:
         consumption = psutil.cpu_percent()
         await submit({
-            'name': 'cpu',
+            'name': model_name,
             'timestamp': int(time()),
             'value': consumption
         })
