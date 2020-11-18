@@ -12,12 +12,11 @@ cache = Cache()
 def main(name, consumption, timestamp=None):
     checkpoint = CheckPoint(os.path.join(model_root, name))
     checkpoint.set_default_parameters(parameters)
-    model = HotGymModel(name, checkpoint, cache)
 
     if timestamp is None:
         timestamp = int(time.time())
 
-    v = run(model, timestamp, float(consumption))
-    print(v)
-
-    model.save()
+    with HotGymModel(name, checkpoint, cache) as model:
+        v = model.run(timestamp, float(consumption))
+        print(v)
+        model.save()

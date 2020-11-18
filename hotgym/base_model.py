@@ -80,18 +80,17 @@ class BaseModel(object):
 
         return self.initialized
 
-    def __del__(self):
+    def run(self, *args, **kwargs):
+        raise NotImplementedError("you must rewrite at sub class")
+
+    def __enter__(self):
+        if not self.initialize():
+            raise Exception('Initialize failed.')
+
+        return self
+
+    def __exit__(self, type, value, traceback):
         self.auto_save()
 
         if self._cache_item:
             self._cache_item.set_model(self.prepare_save())
-
-    def run(self, *args, **kwargs):
-        raise NotImplementedError("you must rewrite at sub class")
-
-
-def run(model, *args, **kwargs):
-    if not model.initialize():
-        return None
-
-    return model.run(*args, **kwargs)

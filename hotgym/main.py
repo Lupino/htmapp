@@ -2,7 +2,6 @@ from .checkpoint import CheckPoint
 from .cache import Cache
 from .models.hotgym import Model as HotGymModel
 from aio_periodic import Worker, open_connection
-from .base_model import run
 import time
 import os
 import argparse
@@ -65,14 +64,14 @@ def run_hotgym(name, checkpoint, data):
 
     timestamp = data.get('timestamp', int(time.time()))
 
-    model = HotGymModel(name, checkpoint, cache)
+    with HotGymModel(name, checkpoint, cache) as model:
+        v = model.run(timestamp, float(consumption))
+        if v:
+            data.update(v)
 
-    v = run(model, timestamp, float(consumption))
+        return data
 
-    if v:
-        data.update(v)
 
-    return data
 
 
 def parse_args(argv):
