@@ -5,6 +5,9 @@ import glob
 import pickle
 import json
 
+import logging
+logger = logging.getLogger(__name__)
+
 try:
     import snappy
 except Exception:
@@ -85,6 +88,7 @@ class CheckPoint(object):
     def save(self, obj):
         checkpoint = self._new_checkpoint()
         path = os.path.join(self.checkpoint, checkpoint)
+        logger.info('Save checkpoint: {}'.format(path))
         with open(path, 'wb') as f:
             data = pickle.dumps(obj)
             if self.compress:

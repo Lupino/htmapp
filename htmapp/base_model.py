@@ -45,9 +45,9 @@ class BaseModel(object):
         return saved
 
     def save(self):
+        self.last_save_time = time.time()
         obj = self.prepare_save()
         self.checkpoint.save(obj)
-        self.last_save_time = time.time()
 
     def auto_save(self):
         if self.last_save_time + self.save_delay < time.time():
@@ -77,10 +77,6 @@ class BaseModel(object):
             if not self.load():
                 self.create()
                 self.initialized = True
-
-            if self._cache:
-                self._cache_item = CacheItem(self.name, self.prepare_save())
-                self._cache.set(self._cache_item)
 
         return self.initialized
 
