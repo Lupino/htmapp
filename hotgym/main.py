@@ -29,7 +29,7 @@ def prepare(func):
             data = json.loads(str(job.workload, 'utf-8'))
         except Exception as e:
             logger.exception(e)
-            return await job.done()
+            return await job.done('null')
 
         name = data.get('name', job.name)
 
@@ -42,7 +42,7 @@ def prepare(func):
         else:
             retval = func(name, checkpoint, data)
 
-        await job.done(retval)
+        await job.done(json.dumps(retval))
 
     return _prepare
 
