@@ -27,14 +27,13 @@ executor = None
 
 def prepare(func):
     async def _prepare(job):
-        data = {}
+        data = str(job.workload, 'utf-8')
+        name = job.name
         try:
-            data = json.loads(str(job.workload, 'utf-8'))
-        except Exception as e:
-            logger.exception(e)
-            return await job.done('null')
-
-        name = data.get('name', job.name)
+            data = json.loads(data)
+            name = data.get('name', job.name)
+        except Exception:
+            pass
 
         checkpoint = CheckPoint(os.path.join(model_root, name))
         checkpoint.set_default_parameters(parameters)
@@ -84,10 +83,20 @@ async def run_save_models(job):
     await job.done()
 
 
+@worker.func('save_model')
+@prepare
+def run_set_save_model(name, checkpoint, data):
+    with HotGymModel(name, checkpoint, cache) as model:
+        model.save()
+
+
 @worker.func('hotgym')
 @prepare
 @run_on_executer
 def run_hotgym(name, checkpoint, data):
+    if not isinstance(data, dict):
+        return None
+
     consumption = data.get('value')
     if consumption is None:
         return data
