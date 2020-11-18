@@ -8,9 +8,11 @@ import os.path
 
 cache = Cache()
 
+
 def main(name, consumption, timestamp=None):
     checkpoint = CheckPoint(os.path.join(model_root, name))
-    model = HotGymModel(parameters, name, checkpoint, cache)
+    checkpoint.set_default_parameters(parameters)
+    model = HotGymModel(name, checkpoint, cache)
 
     if timestamp is None:
         timestamp = int(time.time())

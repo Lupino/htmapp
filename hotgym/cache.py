@@ -1,5 +1,6 @@
 import time
 from .checkpoint import CheckPoint
+import os
 
 
 class CacheItem(object):

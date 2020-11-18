@@ -2,6 +2,8 @@ import os.path
 from time import time
 import glob
 import pickle
+import json
+
 try:
     import snappy
 except Exception:
@@ -41,6 +43,20 @@ class CheckPoint(object):
     def _write_checkpoint(self, checkpoint):
         with open(self.checkpoint_path, 'w') as f:
             f.write(checkpoint)
+
+    def set_default_parameters(self, parameters):
+        path = '{}/parameters.json'.format(self.checkpoint)
+        if not os.path.isfile(path):
+            with open(path, 'w') as f:
+                json.dump(parameters, f, indent=2)
+
+    def get_parameters(self):
+        path = '{}/parameters.json'.format(self.checkpoint)
+        if not os.path.isfile(path):
+            return None
+
+        with open(path, 'r') as f:
+            return json.load(f)
 
     def remove_old_file(self):
         files = glob.glob('{}/checkpoint-*'.format(self.checkpoint))

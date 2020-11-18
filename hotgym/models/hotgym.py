@@ -9,15 +9,13 @@ from ..base_model import BaseModel
 
 
 class Model(BaseModel):
-    def __init__(self, parameters, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         BaseModel.__init__(self, *args, **kwargs)
-
-        self.parameters = parameters
 
         self.more_save_keys(['sp', 'tm'])
 
     def createEncoder(self):
-        parameters = self.parameters
+        parameters = self.checkpoint.get_parameters()
         # Make the Encoders.
         # These will convert input data into binary representations.
         dateEncoder = DateEncoder(
@@ -37,7 +35,7 @@ class Model(BaseModel):
         self.encodingWidth = encodingWidth
 
     def create(self):
-        parameters = self.parameters
+        parameters = self.checkpoint.get_parameters()
 
         self.createEncoder()
 

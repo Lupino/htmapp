@@ -38,7 +38,8 @@ async def run_hotgym(job):
     timestamp = data.get('timestamp', int(time.time()))
 
     checkpoint = CheckPoint(os.path.join(model_root, name))
-    model = HotGymModel(parameters, name, checkpoint, cache)
+    checkpoint.set_default_parameters(parameters)
+    model = HotGymModel(name, checkpoint, cache)
 
     v = run(model, timestamp, float(consumption))
 

@@ -6,7 +6,7 @@ class BaseModel(object):
     def __init__(self, name, checkpoint, cache=None):
         self.name = name
         self.initialized = False
-        self._checkpoint = checkpoint
+        self.checkpoint = checkpoint
         self.last_save_time = 0
         self.save_delay = 10  # 超过一定时间，自动保存 model
         self._cache = cache
@@ -42,7 +42,7 @@ class BaseModel(object):
 
     def save(self):
         obj = self.prepare_save()
-        self._checkpoint.save(obj)
+        self.checkpoint.save(obj)
         self.last_save_time = time.time()
 
     def auto_save(self):
@@ -58,7 +58,7 @@ class BaseModel(object):
             if self._cache_item and self._cache_item.get_model():
                 return self.prepare(self._cache_item.get_model())
 
-        model = self._checkpoint.load()
+        model = self.checkpoint.load()
         if model is None:
             return False
 
