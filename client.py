@@ -13,15 +13,15 @@ import random
 _EXAMPLE_DIR = os.path.dirname(os.path.abspath(__file__))
 _INPUT_FILE_PATH = os.path.join(_EXAMPLE_DIR, "gymdata.csv")
 
-async def main():
+async def main(prefix=''):
     client = Client()
     await client.connect(open_connection, config.periodic_port)
     async def submit(data):
         name = '{name}{timestamp}{value}'.format(**data)
-        print('start {}'.format(name))
         try:
-            v = await client.run_job('hotgym', name, bytes(json.dumps(data), 'utf-8'), timeout=30)
-            print('end {} {}'.format(name, v))
+            v = await client.run_job(prefix + 'hotgym', name, bytes(json.dumps(data), 'utf-8'), timeout=30)
+            data = json.loads(str(v, 'utf-8'))
+            print('value={} anomaly={}'.format(data['value'], data['anomaly']))
         except Exception as e:
             print(e)
             await asyncio.sleep(10)
