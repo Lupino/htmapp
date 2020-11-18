@@ -10,19 +10,34 @@ import os
 import numpy as np
 import random
 
+from uhashring import HashRing
+
 _EXAMPLE_DIR = os.path.dirname(os.path.abspath(__file__))
 _INPUT_FILE_PATH = os.path.join(_EXAMPLE_DIR, "gymdata.csv")
 
-async def main(prefix=''):
+
+async def main():
     client = Client()
     await client.connect(open_connection, config.periodic_port)
+
+    st = await client.status()
+
+    funcs = [k for k in st.keys() if k.endswith('hotgym')]
+
+    hr = HashRing(funcs, hash_fn='ketama')
+
     async def submit(data):
         name = '{name}{timestamp}{value}'.format(**data)
         try:
-            v = await client.run_job(prefix + 'hotgym', name, bytes(json.dumps(data), 'utf-8'), timeout=30)
+            func = hr.get_node(data['name'])
+            v = await client.run_job(func,
+                                     name,
+                                     bytes(json.dumps(data), 'utf-8'),
+                                     timeout=30)
             try:
                 data = json.loads(str(v, 'utf-8'))
-                print('value={} anomaly={}'.format(data['value'], data['anomaly']))
+                print('value={} anomaly={}'.format(data['value'],
+                                                   data['anomaly']))
             except Exception:
                 print(v)
 
@@ -40,7 +55,7 @@ async def main(prefix=''):
         for record in reader:
             records.append(record)
     for i in range(100):
-        records.append( random.choice(records) )
+        records.append(random.choice(records))
 
     for record in records:
         # Convert data string into Python date object.
@@ -48,4 +63,8 @@ async def main(prefix=''):
         # Convert data value string into float.
         consumption = float(record[1])
 
-        await submit({'name': 'test', 'timestamp': dateString.timestamp(), 'value': consumption})
+        await submit({
+            'name': 'test',
+            'timestamp': dateString.timestamp(),
+            'value': consumption
+        })
