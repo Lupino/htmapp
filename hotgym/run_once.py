@@ -2,7 +2,6 @@ import time
 from .checkpoint import CheckPoint
 from .cache import Cache
 from .models.hotgym import Model as HotGymModel
-from .base_model import run
 from config import model_root, parameters
 import os.path
 
