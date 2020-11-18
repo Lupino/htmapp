@@ -5,7 +5,7 @@ INSTALL_LOCK=${ROOT}/.installed
 VENV_PATH=${ROOT}/venv
 
 install_required() {
-    pip install -r requirements.txt
+    pip install -U -r requirements.txt
     shasum -a 256 requirements.txt > ${INSTALL_LOCK}
 }
 
