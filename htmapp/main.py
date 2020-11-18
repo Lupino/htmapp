@@ -70,6 +70,13 @@ def run_set_parameters(name, checkpoint, parameters):
     checkpoint.reset()
 
 
+@worker.func('reset_model')
+@prepare
+def run_set_parameters(name, checkpoint, data):
+    cache.remove(name)
+    checkpoint.reset()
+
+
 @worker.func('set_save_delay')
 @prepare
 def run_set_save_delay(name, checkpoint, data):
