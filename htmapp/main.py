@@ -73,9 +73,15 @@ def run_set_parameters(name, checkpoint, parameters):
 
 @worker.func('set_save_delay')
 @prepare
-def run_set_parameters(name, checkpoint, data):
+def run_set_save_delay(name, checkpoint, data):
     with HotGymModel(name, checkpoint, cache) as model:
         model.set_save_delay(data['save_delay'])
+
+
+@worker.func('save_models')
+async def run_save_models(job):
+    cache.save_items()
+    await job.done()
 
 
 @worker.func('hotgym')
