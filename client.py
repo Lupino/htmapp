@@ -22,7 +22,7 @@ async def main():
 
     st = await client.status()
 
-    funcs = [k for k in st.keys() if k.endswith('hotgym')]
+    funcs = [k for k in st.keys() if k.find('hotgym') > -1]
 
     hr = HashRing(funcs, hash_fn='ketama')
 

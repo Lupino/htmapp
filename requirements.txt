@@ -1,2 +1,2 @@
-aio_periodic @ git+https://github.com/Lupino/python-aio-periodic.git@b8502217c35c81c3a930a6410b90d8b41cb8d738
+aio_periodic @ git+https://github.com/Lupino/python-aio-periodic.git@41c71ad0b00c7393ee39443a55e1ea2c0ebeadb3
 uhashring

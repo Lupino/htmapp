@@ -125,7 +125,13 @@ def parse_args(argv):
                         dest='prefix',
                         default='',
                         type=str,
-                        help='work prefix. default is None')
+                        help='function name prefix')
+    parser.add_argument('-S',
+                        '--subfix',
+                        dest='subfix',
+                        default='',
+                        type=str,
+                        help='function subfix template.')
 
     parser.add_argument('enabled_tasks', nargs='*', help='Enabled tasks')
 
@@ -138,15 +144,15 @@ async def main(args):
 
     executor = ThreadPoolExecutor(args.size)
 
-    prefix = args.prefix
-
+    subfix = args.subfix
     if 'PROCESS_ID' in os.environ:
-        if prefix.find('{}') > -1:
-            prefix = prefix.format(os.environ['PROCESS_ID'])
+        if subfix.find('{}') > -1:
+            subfix = subfix.format(os.environ['PROCESS_ID'])
         else:
-            prefix += '{}_'.format(os.environ['PROCESS_ID'])
+            subfix += '_{}'.format(os.environ['PROCESS_ID'])
 
-    worker.set_prefix(prefix)
+    worker.set_prefix(args.prefix)
+    worker.set_subfix(subfix)
     worker.set_enable_tasks(args.enabled_tasks)
 
     await worker.connect(open_connection, periodic_port)
