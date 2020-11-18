@@ -85,15 +85,13 @@ class CheckPoint(object):
     def save(self, obj):
         checkpoint = self._new_checkpoint()
         path = os.path.join(self.checkpoint, checkpoint)
-        try:
-            with open(path, 'wb') as f:
-                data = pickle.dumps(obj)
-                if self.compress:
-                    data = snappy.compress(data)
-                f.write(data)
-        finally:
-            self._write_checkpoint(checkpoint)
-            self.remove_old_file()
+        with open(path, 'wb') as f:
+            data = pickle.dumps(obj)
+            if self.compress:
+                data = snappy.compress(data)
+            f.write(data)
+        self._write_checkpoint(checkpoint)
+        self.remove_old_file()
 
     def load(self):
         checkpoint = self._get_checkpoint()
