@@ -3,10 +3,10 @@ from importlib import import_module
 import os.path
 import argparse
 from multiprocessing import Process
-import io
 import sys
 import logging
-formatter = "[%(asctime)s] %(name)s {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"
+formatter = "[%(asctime)s] %(name)s {%(filename)s:%(lineno)d} %(levelname)s"
+formatter += " - %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=formatter)
 
 
@@ -26,6 +26,9 @@ def fixed_module_name(module_name):
 def start(module_name, argv):
     print('Start running module', module_name)
     module = import_module(fixed_module_name(module_name))
+
+    if hasattr(module, 'parse_args'):
+        argv = [module.parse_args(argv)]
 
     if asyncio.iscoroutinefunction(module.main):
         loop = asyncio.get_event_loop()
@@ -55,19 +58,35 @@ def main(script, *argv):
                         help='module name or module file')
     parser.add_argument('argv', nargs='*', help='module arguments')
 
-    args = parser.parse_args(argv)
+    script_argv = []
+
+    is_module_argv = False
+    module_argv = []
+
+    for arg in argv:
+        if arg.startswith('-') and not is_module_argv:
+            script_argv.append(arg)
+        else:
+            is_module_argv = True
+            module_argv.append(arg)
+
+    if len(module_argv) > 0:
+        script_argv.append(module_argv[0])
+        module_argv = module_argv[1:]
+
+    args = parser.parse_args(script_argv)
 
     if args.processes > 1:
         processes = []
         for i in range(args.processes):
-            p = Process(target=start, args=(args.module_name, args.argv))
+            p = Process(target=start, args=(args.module_name, module_argv))
             p.start()
             processes.append(p)
 
         for p in processes:
             p.join()
     else:
-        start(args.module_name, args.argv)
+        start(args.module_name, module_argv)
 
 
 if __name__ == '__main__':

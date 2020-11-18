@@ -5,6 +5,7 @@ from aio_periodic import Worker, open_connection
 from .base_model import run
 import time
 import os
+import argparse
 
 import json
 
@@ -12,7 +13,7 @@ from config import model_root, periodic_port, parameters
 
 import logging
 
-logger = logging.getLogger('hotgym.main')
+logger = logging.getLogger(__name__)
 
 cache = Cache(checkpoint_root=model_root)
 
@@ -49,18 +50,32 @@ async def run_hotgym(job):
     await job.done(data)
 
 
-async def main(*tasks):
-    size = 10
-    enabled_tasks = []
-    for task in tasks:
-        if task.startswith('--size='):
-            size = int(task.lstrip('--size='))
-        elif task.startswith('--prefix='):
-            worker.set_prefix(task.lstrip('--prefix='))
-        else:
-            enabled_tasks.append(task)
+def parse_args(argv):
+    parser = argparse.ArgumentParser(description='Hotgym worker.',
+                                     prog=__name__)
+    parser.add_argument('-s',
+                        '--size',
+                        dest='size',
+                        default=10,
+                        type=int,
+                        help='work size. default is 10')
+    parser.add_argument('-p',
+                        '--prefix',
+                        dest='prefix',
+                        default='',
+                        type=str,
+                        help='work prefix. default is None')
 
-    worker.set_enable_tasks(enabled_tasks)
+    parser.add_argument('enabled_tasks', nargs='*', help='Enabled tasks')
+
+    args = parser.parse_args(argv)
+    return args
+
+
+async def main(args):
+
+    worker.set_prefix(args.prefix)
+    worker.set_enable_tasks(args.enabled_tasks)
 
     await worker.connect(open_connection, periodic_port)
-    worker.work(size)
+    worker.work(args.size)
