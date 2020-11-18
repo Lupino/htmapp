@@ -2,6 +2,10 @@ from .cache import CacheItem
 import time
 
 
+class ModelError(Exception):
+    pass
+
+
 class BaseModel(object):
     def __init__(self, name, checkpoint, cache=None):
         self.name = name
@@ -71,8 +75,8 @@ class BaseModel(object):
     def initialize(self):
         if not self.initialized:
             if not self.load():
-                if not self.create():
-                    return False
+                self.create()
+                self.initialized = True
 
             if self._cache:
                 self._cache_item = CacheItem(self.name, self.prepare_save())
@@ -85,7 +89,7 @@ class BaseModel(object):
 
     def __enter__(self):
         if not self.initialize():
-            raise Exception('Initialize failed.')
+            raise ModelError('Initialize failed.')
 
         return self
 

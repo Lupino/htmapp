@@ -72,8 +72,6 @@ def run_hotgym(name, checkpoint, data):
         return data
 
 
-
-
 def parse_args(argv):
     parser = argparse.ArgumentParser(description='Hotgym worker.',
                                      prog=__name__)
