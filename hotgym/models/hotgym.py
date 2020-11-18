@@ -75,8 +75,8 @@ class Model(BaseModel):
         self.tm = tm
 
     def prepare(self, model):
-        BaseModel.prepare(self, model)
         self.createEncoder()
+        return BaseModel.prepare(self, model)
 
     def run(self, timestamp, consumption):
         # Call the encoders to create bit representations for each value.

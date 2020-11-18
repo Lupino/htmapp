@@ -1,6 +1,5 @@
 model_root='models'
-periodic='tcp://127.0.0.1:5000'
-max_thread=2
+periodic_port='tcp://127.0.0.1:5000'
 
 parameters = {
   # there are 2 (3) encoders: "value" (RDSE) & "time" (DateTime weekend, timeOfDay)

@@ -22,7 +22,14 @@ class BaseModel(object):
 
     def prepare(self, model):
         for key in self.save_keys:
-            setattr(self, key, model.get(key, None))
+            val = model.get(key)
+            if val is None:
+                return False
+
+            setattr(self, key, val)
+
+        self.initialized = True
+        return True
 
     def prepare_save(self):
         saved = {}
@@ -47,12 +54,9 @@ class BaseModel(object):
 
     def load(self):
         if self._cache:
-            item = self._cache.get(self.name)
-            if item and item.get_model():
-                self.prepare(item.get_model())
-                self.initialized = True
-                self._cache_item = item
-                return True
+            self._cache_item = self._cache.get(self.name)
+            if self._cache_item and self._cache_item.get_model():
+                return self.prepare(self._cache_item.get_model())
 
         model = self._checkpoint.load()
         if model is None:
@@ -62,10 +66,7 @@ class BaseModel(object):
             self._cache_item = CacheItem(self.name, model)
             self._cache.set(self._cache_item)
 
-        self.prepare(model)
-        self.initialized = True
-
-        return True
+        return self.prepare(model)
 
     def initialize(self):
         if not self.initialized:
