@@ -6,6 +6,7 @@ import time
 import os
 import argparse
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 import json
 
@@ -20,6 +21,8 @@ cache = Cache(checkpoint_root=model_root)
 worker = Worker()
 
 run_forever = True
+
+executor = None
 
 
 def prepare(func):
@@ -47,6 +50,19 @@ def prepare(func):
     return _prepare
 
 
+def run_on_executer(func):
+    async def _run_on_executer(*args, **kwargs):
+        if executor:
+            loop = worker.loop
+            task = loop.run_in_executor(executor, func, *args, **kwargs)
+            await asyncio.wait([task])
+            return task.result()
+        else:
+            return func(*args, **kwargs)
+
+    return _run_on_executer
+
+
 @worker.func('set_parameters')
 @prepare
 def run_set_parameters(name, checkpoint, parameters):
@@ -57,6 +73,7 @@ def run_set_parameters(name, checkpoint, parameters):
 
 @worker.func('hotgym')
 @prepare
+@run_on_executer
 def run_hotgym(name, checkpoint, data):
     consumption = data.get('value')
     if consumption is None:
@@ -95,6 +112,9 @@ def parse_args(argv):
 
 
 async def main(args):
+    global executor
+
+    executor = ThreadPoolExecutor(args.size)
 
     worker.set_prefix(args.prefix)
     worker.set_enable_tasks(args.enabled_tasks)
