@@ -28,6 +28,9 @@ if [ "$1" == "yapf" ]; then
     $@
 elif [ "$1" == "flake8" ]; then
     $@
+elif [ "$1" == "cli" ]; then
+    shift
+    ${PYTHON} script.py htmapp/cli.py $@
 else
     ${PYTHON} script.py $@
 fi
