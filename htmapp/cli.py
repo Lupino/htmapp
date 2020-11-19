@@ -16,7 +16,6 @@ async def save_models(client):
 
 
 async def run_job(client, func_name, metric_name, value='', is_json=False):
-    print(func_name, metric_name, value, is_json)
     data = await client.run_job(func_name,
                                 metric_name,
                                 timeout=30,
