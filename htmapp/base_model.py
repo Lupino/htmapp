@@ -93,8 +93,9 @@ class BaseModel(object):
         if self._cache_item:
             if self._cache_item.get_updated():
                 return
-
             self._cache_item.set_updated(True)
-            self._cache_item.set_model(self.prepare_save())
 
         self.auto_save()
+
+        if self._cache_item:
+            self._cache_item.set_model(self.prepare_save())
