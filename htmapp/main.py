@@ -25,26 +25,39 @@ run_forever = True
 executor = None
 
 
-def prepare(func):
-    async def _prepare(job):
-        data = str(job.workload, 'utf-8')
-        name = job.name
-        try:
-            data = json.loads(data)
-            name = data.get('name', job.name)
-        except Exception:
-            pass
+def prepare(is_json=False):
+    def _prepare(func):
+        async def __prepare(job):
+            name = job.name
+            data = job.workload
 
-        checkpoint = CheckPoint(os.path.join(model_root, name))
-        checkpoint.set_default_parameters(parameters)
+            if is_json:
+                data = str(data, 'utf-8')
 
-        retval = None
-        if asyncio.iscoroutinefunction(func):
-            retval = await func(name, checkpoint, data)
-        else:
-            retval = func(name, checkpoint, data)
+            if is_json:
+                try:
+                    data = json.loads(data)
+                    name = data.get('name', job.name)
+                except Exception:
+                    pass
 
-        await job.done(json.dumps(retval))
+            checkpoint = CheckPoint(os.path.join(model_root, name))
+            checkpoint.set_default_parameters(parameters)
+
+            args = [name, checkpoint]
+
+            if is_json:
+                args.append(data)
+
+            retval = None
+            if asyncio.iscoroutinefunction(func):
+                retval = await func(*args)
+            else:
+                retval = func(*args)
+
+            await job.done(json.dumps(retval))
+
+        return __prepare
 
     return _prepare
 
@@ -62,23 +75,22 @@ def run_on_executer(func):
     return _run_on_executer
 
 
-@worker.func('set_parameters')
-@prepare
-def run_set_parameters(name, checkpoint, parameters):
-    checkpoint.set_parameters(parameters)
-    cache.remove(name)
-    checkpoint.reset()
-
-
 @worker.func('reset_model')
-@prepare
-def run_set_parameters(name, checkpoint, data):
+@prepare(is_json=True)
+def run_reset_model(name, checkpoint, parameters):
+    if isinstance(parameters, dict):
+        checkpoint.set_parameters(parameters)
+
+    item = cache.get(name)
+    if item:
+        item.set_updated(True)
+
     cache.remove(name)
     checkpoint.reset()
 
 
 @worker.func('set_save_delay')
-@prepare
+@prepare(is_json=True)
 def run_set_save_delay(name, checkpoint, data):
     with HotGymModel(name, checkpoint, cache) as model:
         model.set_save_delay(data['save_delay'])
@@ -91,14 +103,14 @@ async def run_save_models(job):
 
 
 @worker.func('save_model')
-@prepare
-def run_set_save_model(name, checkpoint, data):
+@prepare()
+def run_set_save_model(name, checkpoint):
     with HotGymModel(name, checkpoint, cache) as model:
         model.save()
 
 
 @worker.func('hotgym')
-@prepare
+@prepare(is_json=True)
 @run_on_executer
 def run_hotgym(name, checkpoint, data):
     if not isinstance(data, dict):
@@ -119,7 +131,7 @@ def run_hotgym(name, checkpoint, data):
 
 
 def parse_args(argv):
-    parser = argparse.ArgumentParser(description='Hotgym worker.',
+    parser = argparse.ArgumentParser(description='Htmapp worker.',
                                      prog=__name__)
     parser.add_argument('-s',
                         '--size',

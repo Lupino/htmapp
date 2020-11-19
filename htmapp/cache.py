@@ -7,6 +7,7 @@ class CacheItem(object):
     def __init__(self, name, model=None):
         self.name = name
         self.model = model
+        self.updated = False
         self.timestamp = time.time()
 
     def __eq__(self, item):
@@ -25,6 +26,12 @@ class CacheItem(object):
     def set_model(self, model):
         self.model = model
         self.timestamp = time.time()
+
+    def set_updated(self, updated):
+        self.updated = updated
+
+    def get_updated(self):
+        return self.updated
 
 
 class Cache(object):

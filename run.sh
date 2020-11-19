@@ -24,4 +24,10 @@ else
     install_required
 fi
 
-${PYTHON} script.py $@
+if [ "$1" == "yapf" ]; then
+    $@
+elif [ "$1" == "flake8" ]; then
+    $@
+else
+    ${PYTHON} script.py $@
+fi

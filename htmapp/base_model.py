@@ -46,8 +46,7 @@ class BaseModel(object):
 
     def save(self):
         self.last_save_time = time.time()
-        obj = self.prepare_save()
-        self.checkpoint.save(obj)
+        self.checkpoint.save(self.prepare_save())
 
     def auto_save(self):
         if self.last_save_time + self.save_delay < time.time():
@@ -60,6 +59,7 @@ class BaseModel(object):
         if self._cache:
             self._cache_item = self._cache.get(self.name)
             if self._cache_item and self._cache_item.get_model():
+                self._cache_item.set_updated(False)
                 return self.prepare(self._cache_item.get_model())
 
         model = self.checkpoint.load()
@@ -90,7 +90,11 @@ class BaseModel(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        self.auto_save()
-
         if self._cache_item:
+            if self._cache_item.get_updated():
+                return
+
+            self._cache_item.set_updated(True)
             self._cache_item.set_model(self.prepare_save())
+
+        self.auto_save()

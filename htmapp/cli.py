@@ -1,0 +1,96 @@
+from aio_periodic import open_connection, Client
+import config
+import json
+import argparse
+import sys
+
+from .utils import get_func_name
+
+
+async def save_models(client):
+    st = await client.status()
+    funcs = [k for k in st.keys() if k.find('save_models') > -1]
+
+    for func in funcs:
+        await run_job(client, func, 'metric')
+
+
+async def run_job(client, func_name, metric_name, value='', is_json=False):
+    print(func_name, metric_name, value, is_json)
+    data = await client.run_job(func_name,
+                                metric_name,
+                                timeout=30,
+                                workload=value)
+    if is_json:
+        data = json.loads(str(data, 'utf-8'))
+        print(data)
+
+
+def prepare_value(args):
+    if hasattr(args, 'parameters'):
+        with open(args.parameters, 'rb') as f:
+            return f.read()
+
+    if hasattr(args, 'delay'):
+        return bytes(json.dumps({'save_delay': args.delay}), 'utf-8')
+
+    return ''
+
+
+def parse_args(argv):
+    parser = argparse.ArgumentParser(description='Htmapp cli.', prog=__name__)
+
+    subparsers = parser.add_subparsers(help='sub-command help',
+                                       title='subcommands',
+                                       description='valid subcommands')
+
+    parser_save_model = subparsers.add_parser('save_model', help='Save model')
+    parser_save_model.add_argument('metric', type=str, help='The metric name.')
+    parser_save_model.set_defaults(func=run_job, action='save_model')
+
+    parser_reset_model = subparsers.add_parser('reset_model',
+                                               help='Reset model')
+    parser_reset_model.add_argument('metric',
+                                    type=str,
+                                    help='The metric name.')
+    parser_reset_model.add_argument('-p',
+                                    '--parameters',
+                                    type=str,
+                                    help='The parameters.json file path.')
+    parser_reset_model.set_defaults(func=run_job, action='reset_model')
+
+    parser_save_models = subparsers.add_parser('save_models',
+                                               help='Save all model')
+    parser_save_models.set_defaults(func=save_models, action='save_models')
+
+    parser_set_save_delay = subparsers.add_parser('set_save_delay',
+                                                  help='Set model save delay')
+    parser_set_save_delay.add_argument('metric',
+                                       type=str,
+                                       help='The metric name.')
+    parser_set_save_delay.add_argument('delay',
+                                       type=float,
+                                       help='The save delay.')
+    parser_set_save_delay.set_defaults(func=run_job, action='set_save_delay')
+
+    args = parser.parse_args(argv)
+    if not hasattr(args, 'func'):
+        parser.print_help()
+        sys.exit(1)
+
+    return args
+
+
+async def main(args):
+    client = Client()
+    await client.connect(open_connection, config.periodic_port)
+
+    if hasattr(args, 'metric'):
+        func_name = await get_func_name(client, args.action, args.metric)
+        await args.func(client,
+                        func_name,
+                        args.metric,
+                        value=prepare_value(args))
+
+    if args.action == 'save_models':
+        await args.func(client)
