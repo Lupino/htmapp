@@ -1,17 +1,13 @@
 import asyncio
-from aio_periodic import open_connection, Client, Job
+from aio_periodic import open_connection, Client
 import config
 import json
-import sys
 
 import csv
 import datetime
 import os
-import numpy as np
 import random
 from htmapp.utils import get_nodes
-
-from uhashring import HashRing
 
 _EXAMPLE_DIR = os.path.dirname(os.path.abspath(__file__))
 _INPUT_FILE_PATH = os.path.join(_EXAMPLE_DIR, "gymdata.csv")
@@ -49,7 +45,7 @@ async def main():
     records = []
     with open(_INPUT_FILE_PATH, "r") as fin:
         reader = csv.reader(fin)
-        headers = next(reader)
+        next(reader)
         next(reader)
         next(reader)
         for record in reader:
