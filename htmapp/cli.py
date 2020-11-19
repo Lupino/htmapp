@@ -36,15 +36,15 @@ async def run_job(client,
 
 
 def prepare_value(args):
-    if hasattr(args, 'parameters'):
+    if getattr(args, 'parameters', None):
         with open(args.parameters, 'rb') as f:
             return f.read()
 
-    if hasattr(args, 'model'):
+    if getattr(args, 'model', None):
         with open(args.model, 'rb') as f:
             return f.read()
 
-    if hasattr(args, 'delay'):
+    if getattr(args, 'delay', None):
         return bytes(json.dumps({'save_delay': args.delay}), 'utf-8')
 
     return ''
