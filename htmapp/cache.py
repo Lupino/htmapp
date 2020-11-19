@@ -49,7 +49,7 @@ class Cache(object):
 
         if len(self.items) > self.size:
             items = sorted(self.items, key=lambda x: x.timestamp)
-            self._save_item(items[0])
+            self.save_item(items[0])
 
             self.items.remove(items[0])
 
@@ -65,7 +65,7 @@ class Cache(object):
         if item in self.items:
             self.items.remove(item)
 
-    def _save_item(self, item):
+    def save_item(self, item):
         if self.checkpoint_root is not None:
             name = item.get_name()
             model = item.get_model()
@@ -74,4 +74,4 @@ class Cache(object):
 
     def save_items(self):
         for item in self.items:
-            self._save_item(item)
+            self.save_item(item)

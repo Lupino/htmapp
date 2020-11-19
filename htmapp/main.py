@@ -1,5 +1,5 @@
 from .checkpoint import CheckPoint
-from .cache import Cache
+from .cache import Cache, CacheItem
 from .models.hotgym import Model as HotGymModel
 from aio_periodic import Worker, open_connection
 import time
@@ -7,6 +7,7 @@ import os
 import argparse
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+import pickle
 
 import json
 
@@ -107,6 +108,43 @@ async def run_save_models(job):
 def run_set_save_model(name, checkpoint):
     with HotGymModel(name, checkpoint, cache) as model:
         model.save()
+
+
+@worker.func('get_model')
+async def run_get_model(job):
+    name = job.name
+    item = cache.get(name)
+    model = None
+    if item:
+        model = item.get_model()
+
+    if model is None:
+        checkpoint = CheckPoint(os.path.join(model_root, name))
+        model = checkpoint.load()
+
+    await job.done(pickle.dumps(model))
+
+
+@worker.func('put_model')
+async def run_put_model(job):
+    name = job.name
+    model = None
+    try:
+        model = pickle.loads(job.workload)
+    except Exception:
+        return await job.done()
+
+    item = cache.get(name)
+    if item:
+        item.set_updated(True)
+    else:
+        item = CacheItem(name)
+        cache.set(item)
+
+    item.set_model(model)
+    cache.save_item(item)
+
+    await job.done()
 
 
 @worker.func('hotgym')

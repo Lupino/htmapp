@@ -15,19 +15,33 @@ async def save_models(client):
         await run_job(client, func, 'metric')
 
 
-async def run_job(client, func_name, metric_name, value='', is_json=False):
+async def run_job(client,
+                  func_name,
+                  metric_name,
+                  value='',
+                  is_json=False,
+                  output=None):
     data = await client.run_job(func_name,
                                 metric_name,
                                 timeout=30,
                                 workload=value)
-    if is_json:
-        data = json.loads(str(data, 'utf-8'))
-        print(data)
+
+    if output:
+        with open(output, 'wb') as f:
+            f.write(data)
+    else:
+        if is_json:
+            data = json.loads(str(data, 'utf-8'))
+            print(data)
 
 
 def prepare_value(args):
     if hasattr(args, 'parameters'):
         with open(args.parameters, 'rb') as f:
+            return f.read()
+
+    if hasattr(args, 'model'):
+        with open(args.model, 'rb') as f:
             return f.read()
 
     if hasattr(args, 'delay'):
@@ -42,6 +56,20 @@ def parse_args(argv):
     subparsers = parser.add_subparsers(help='sub-command help',
                                        title='subcommands',
                                        description='valid subcommands')
+
+    parser_get_model = subparsers.add_parser('get_model', help='Get model')
+    parser_get_model.add_argument('metric', type=str, help='The metric name.')
+    parser_get_model.add_argument('output',
+                                  type=str,
+                                  help='The output file name.')
+    parser_get_model.set_defaults(func=run_job, action='get_model')
+
+    parser_put_model = subparsers.add_parser('put_model', help='Put model')
+    parser_put_model.add_argument('metric', type=str, help='The metric name.')
+    parser_put_model.add_argument('model',
+                                  type=str,
+                                  help='The model file name.')
+    parser_put_model.set_defaults(func=run_job, action='put_model')
 
     parser_save_model = subparsers.add_parser('save_model', help='Save model')
     parser_save_model.add_argument('metric', type=str, help='The metric name.')
@@ -89,6 +117,7 @@ async def main(args):
         await args.func(client,
                         func_name,
                         args.metric,
+                        output=getattr(args, 'output', None),
                         value=prepare_value(args))
 
     if args.action == 'save_models':
