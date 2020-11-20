@@ -11,13 +11,13 @@ import pickle
 
 import json
 
-from config import model_root, periodic_port, parameters
+from config import parameters
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-cache = Cache(checkpoint_root=model_root)
+cache = Cache()
 
 worker = Worker()
 
@@ -42,7 +42,7 @@ def prepare(is_json=False):
                 except Exception:
                     pass
 
-            checkpoint = CheckPoint(os.path.join(model_root, name))
+            checkpoint = CheckPoint(os.path.join(cache.checkpoint_root, name))
             checkpoint.set_default_parameters(parameters)
 
             args = [name, checkpoint]
@@ -119,7 +119,7 @@ async def run_get_model(job):
         model = item.get_model()
 
     if model is None:
-        checkpoint = CheckPoint(os.path.join(model_root, name))
+        checkpoint = CheckPoint(os.path.join(cache.checkpoint_root, name))
         model = checkpoint.load()
 
     await job.done(pickle.dumps(model))
@@ -177,6 +177,12 @@ def parse_args(argv):
                         default=10,
                         type=int,
                         help='work size. default is 10')
+    parser.add_argument('-H',
+                        '--periodic_port',
+                        dest='periodic_port',
+                        default='tcp://:5000',
+                        type=str,
+                        help='Periodicd host')
     parser.add_argument('-p',
                         '--prefix',
                         dest='prefix',
@@ -190,6 +196,18 @@ def parse_args(argv):
                         type=str,
                         help='function subfix template.')
 
+    parser.add_argument('--cache-size',
+                        dest='cache_size',
+                        default=10,
+                        type=int,
+                        help='cache size.')
+
+    parser.add_argument('--checkpoint',
+                        dest='checkpoint',
+                        default='models',
+                        type=str,
+                        help='CheckPoint Root.')
+
     parser.add_argument('enabled_tasks', nargs='*', help='Enabled tasks')
 
     args = parser.parse_args(argv)
@@ -198,6 +216,9 @@ def parse_args(argv):
 
 async def main(args):
     global executor
+
+    cache.size = args.cache_size
+    cache.checkpoint_root = args.checkpoint
 
     executor = ThreadPoolExecutor(args.size)
 
@@ -212,5 +233,5 @@ async def main(args):
     worker.set_subfix(subfix)
     worker.set_enable_tasks(args.enabled_tasks)
 
-    await worker.connect(open_connection, periodic_port)
+    await worker.connect(open_connection, args.periodic_port)
     worker.work(args.size)

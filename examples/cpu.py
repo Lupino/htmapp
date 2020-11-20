@@ -1,6 +1,6 @@
 import asyncio
 from aio_periodic import open_connection, Client
-import config
+import argparse
 import json
 from time import time
 import psutil
@@ -8,9 +8,23 @@ import psutil
 from htmapp.utils import get_nodes
 
 
-async def main():
+def parse_args(argv):
+    parser = argparse.ArgumentParser(description='Htmapp examples.',
+                                     prog=__name__)
+    parser.add_argument('-H',
+                        '--periodic_port',
+                        dest='periodic_port',
+                        default='tcp://:5000',
+                        type=str,
+                        help='Periodicd host')
+    args = parser.parse_args(argv)
+    return args
+
+
+async def main(args):
+
     client = Client()
-    await client.connect(open_connection, config.periodic_port)
+    await client.connect(open_connection, args.periodic_port)
 
     hr = await get_nodes(client)
     model_name = 'cpu'

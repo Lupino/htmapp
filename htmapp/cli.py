@@ -1,5 +1,4 @@
 from aio_periodic import open_connection, Client
-import config
 import json
 import argparse
 import sys
@@ -52,6 +51,13 @@ def prepare_value(args):
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(description='Htmapp cli.', prog=__name__)
+
+    parser.add_argument('-H',
+                        '--periodic_port',
+                        dest='periodic_port',
+                        default='tcp://:5000',
+                        type=str,
+                        help='Periodicd host')
 
     subparsers = parser.add_subparsers(help='sub-command help',
                                        title='subcommands',
@@ -110,7 +116,7 @@ def parse_args(argv):
 
 async def main(args):
     client = Client()
-    await client.connect(open_connection, config.periodic_port)
+    await client.connect(open_connection, args.periodic_port)
 
     if hasattr(args, 'metric'):
         func_name = await get_func_name(client, args.action, args.metric)

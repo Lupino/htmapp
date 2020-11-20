@@ -1,6 +1,6 @@
 import asyncio
 from aio_periodic import open_connection, Client
-import config
+import argparse
 import json
 
 import csv
@@ -13,9 +13,23 @@ _EXAMPLE_DIR = os.path.dirname(os.path.abspath(__file__))
 _INPUT_FILE_PATH = os.path.join(_EXAMPLE_DIR, "gymdata.csv")
 
 
-async def main():
+def parse_args(argv):
+    parser = argparse.ArgumentParser(description='Htmapp examples.',
+                                     prog=__name__)
+    parser.add_argument('-H',
+                        '--periodic_port',
+                        dest='periodic_port',
+                        default='tcp://:5000',
+                        type=str,
+                        help='Periodicd host')
+    args = parser.parse_args(argv)
+    return args
+
+
+async def main(args):
+
     client = Client()
-    await client.connect(open_connection, config.periodic_port)
+    await client.connect(open_connection, args.periodic_port)
 
     hr = await get_nodes(client)
     model_name = 'test'
