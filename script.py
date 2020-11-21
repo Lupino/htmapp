@@ -84,7 +84,8 @@ def main(script, *argv):
             script_argv.append(arg)
             if arg.startswith('-'):
                 if arg.find('=') == -1:
-                    script_argv.append(argv.pop())
+                    if len(argv) > 0:
+                        script_argv.append(argv.pop())
 
             else:
                 is_module_argv = True
