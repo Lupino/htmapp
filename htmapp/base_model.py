@@ -1,5 +1,9 @@
 from .cache import CacheItem
+from importlib import import_module
 import time
+import os
+import os.path
+from glob import glob
 
 
 class ModelError(Exception):
@@ -7,6 +11,9 @@ class ModelError(Exception):
 
 
 class BaseModel(object):
+    model_name = 'base_model'
+    models = {}
+
     def __init__(self, name, checkpoint, cache=None):
         self.name = name
         self.initialized = False
@@ -36,7 +43,7 @@ class BaseModel(object):
         return True
 
     def prepare_save(self):
-        saved = {}
+        saved = {'module_name': self.module_name}
 
         for key in self.save_keys:
             val = getattr(self, key, None)
@@ -99,3 +106,21 @@ class BaseModel(object):
 
         if self._cache_item:
             self._cache_item.set_model(self.prepare_save())
+
+    @classmethod
+    def load_models(cls):
+        path = os.path.dirname(__file__)
+        for model in glob(os.path.join(path, 'models', '*.py')):
+            module_name = os.path.basename(model)[:-3]
+            module = import_module('htmapp.models.' + module_name)
+            for cls_name in dir(module):
+                cls = getattr(module, cls_name, None)
+                if hasattr(cls, 'model_name'):
+                    if cls.model_name == 'base_model':
+                        continue
+
+                    cls.models[cls.model_name] = cls
+
+    @classmethod
+    def get(cls, name):
+        return cls.models.get(name, None)

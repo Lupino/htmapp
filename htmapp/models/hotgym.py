@@ -9,6 +9,8 @@ from ..base_model import BaseModel
 
 
 class Model(BaseModel):
+    model_name = 'hotgym'
+
     def __init__(self, *args, **kwargs):
         BaseModel.__init__(self, *args, **kwargs)
 

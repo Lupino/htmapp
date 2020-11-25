@@ -4,10 +4,12 @@ from .models.hotgym import Model as HotGymModel
 from aio_periodic import Worker, open_connection
 import time
 import os
+import os.path
 import argparse
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import pickle
+from .base_model import BaseModel
 
 import json
 
@@ -216,6 +218,8 @@ def parse_args(argv):
 
 async def main(args):
     global executor
+
+    BaseModel.load_models()
 
     cache.size = args.cache_size
     cache.checkpoint_root = args.checkpoint
