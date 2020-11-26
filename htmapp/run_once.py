@@ -1,10 +1,14 @@
 import time
 from .checkpoint import CheckPoint
 from .cache import Cache
-from .models.hotgym import Model as HotGymModel
+from .base_model import BaseModel
 from config import parameters
 import os.path
 import argparse
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 cache = Cache()
 
@@ -18,6 +22,7 @@ def parse_args(argv):
                         default='tcp://:5000',
                         type=str,
                         help='Periodicd host')
+
     parser.add_argument('-t',
                         '--timestamp',
                         dest='timestamp',
@@ -31,23 +36,48 @@ def parse_args(argv):
                         type=str,
                         help='CheckPoint Root.')
 
+    parser.add_argument('-m',
+                        '--model',
+                        dest='model',
+                        default='hotgym',
+                        type=str,
+                        help='Htmapp model.')
+
     parser.add_argument('metric', help='Metric name')
-    parser.add_argument('value', type=int, help='Metric value')
+    parser.add_argument('value', type=float, help='Metric value')
 
     args = parser.parse_args(argv)
     return args
 
 
 def main(args):
+    BaseModel.load_models()
+
     checkpoint = CheckPoint(os.path.join(args.checkpoint, args.metric))
     checkpoint.set_default_parameters(parameters)
+
+    model_name = checkpoint.get_model_name()
+
+    if not model_name:
+        model_name = args.model
+
+    if model_name != args.model:
+        logger.error('Model expect {} but got {} not match.'.format(
+            model_name, args.model))
+        return
+
+    Model = BaseModel.get(model_name)
+
+    if not Model:
+        logger.error('Model {} not found.'.format(model_name))
+        return
 
     timestamp = args.timestamp
 
     if timestamp == 0:
         timestamp = int(time.time())
 
-    with HotGymModel(args.metric, checkpoint, cache) as model:
+    with Model(args.metric, checkpoint, cache) as model:
         v = model.run(timestamp, args.value)
         print(v)
         model.save()

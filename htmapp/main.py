@@ -1,6 +1,5 @@
 from .checkpoint import CheckPoint
 from .cache import Cache, CacheItem
-from .models.hotgym import Model as HotGymModel
 from aio_periodic import Worker, open_connection
 import time
 import os
