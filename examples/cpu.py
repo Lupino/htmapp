@@ -27,8 +27,8 @@ async def main(args):
     await client.connect(open_connection, args.periodic_port)
 
     hr = await get_nodes(client)
-    model_name = 'cpu'
-    func = hr.get_node(model_name)
+    metric_name = 'cpu'
+    func = hr.get_node(metric_name)
 
     async def submit(data):
         name = '{name}{timestamp}{value}'.format(**data)
@@ -54,7 +54,8 @@ async def main(args):
     while True:
         consumption = psutil.cpu_percent()
         await submit({
-            'name': model_name,
+            'name': metric_name,
+            'model_name': 'hotgym',
             'timestamp': int(time()),
             'value': consumption
         })

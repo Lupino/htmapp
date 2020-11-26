@@ -51,6 +51,9 @@ class CheckPoint(object):
     def _get_parameters_path(self):
         return '{}/parameters.json'.format(self.checkpoint)
 
+    def _get_model_name_path(self):
+        return '{}/model_name'.format(self.checkpoint)
+
     def set_default_parameters(self, parameters):
         path = self._get_parameters_path()
         if not os.path.isfile(path):
@@ -68,6 +71,19 @@ class CheckPoint(object):
 
         with open(path, 'r') as f:
             return json.load(f)
+
+    def set_model_name(self, model_name):
+        path = self._get_model_name_path()
+        with open(path, 'w') as f:
+            f.write(model_name)
+
+    def get_model_name(self):
+        path = self._get_model_name_path()
+        if not os.path.isfile(path):
+            return None
+
+        with open(path, 'r') as f:
+            return f.read().strip()
 
     def remove_old_file(self):
         files = glob.glob('{}/checkpoint-*'.format(self.checkpoint))

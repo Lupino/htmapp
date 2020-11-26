@@ -32,8 +32,8 @@ async def main(args):
     await client.connect(open_connection, args.periodic_port)
 
     hr = await get_nodes(client)
-    model_name = 'test'
-    func = hr.get_node(model_name)
+    metric_name = 'test'
+    func = hr.get_node(metric_name)
 
     await client.run_job(func.format('reset_model'), 'test')
 
@@ -74,7 +74,8 @@ async def main(args):
         consumption = float(record[1])
 
         await submit({
-            'name': model_name,
+            'name': metric_name,
             'timestamp': dateString.timestamp(),
+            'model_name': 'hotgym',
             'value': consumption
         })

@@ -47,7 +47,24 @@ def prepare(is_json=False):
             checkpoint = CheckPoint(os.path.join(cache.checkpoint_root, name))
             checkpoint.set_default_parameters(parameters)
 
-            args = [name, checkpoint]
+            model_name = checkpoint.get_model_name()
+
+            if not model_name and isinstance(data, dict):
+                model_name = data.get('model_name', 'hotgym')
+
+            if not model_name:
+                await job.done(json.dumps({'err': 'model not found.'}))
+                return
+
+            Model = BaseModel.get(model_name)
+
+            if not Model:
+                await job.done(json.dumps({'err': 'model not found.'}))
+                return
+
+            model = Model(name, checkpoint, cache)
+
+            args = [model]
 
             if is_json:
                 args.append(data)
@@ -80,22 +97,22 @@ def run_on_executer(func):
 
 @worker.func('reset_model')
 @prepare(is_json=True)
-def run_reset_model(name, checkpoint, parameters):
+def run_reset_model(model, parameters):
     if isinstance(parameters, dict):
-        checkpoint.set_parameters(parameters)
+        model.checkpoint.set_parameters(parameters)
 
-    item = cache.get(name)
+    item = cache.get(model.name)
     if item:
         item.set_updated(True)
 
-    cache.remove(name)
-    checkpoint.reset()
+    cache.remove(model.name)
+    model.checkpoint.reset()
 
 
 @worker.func('set_save_delay')
 @prepare(is_json=True)
-def run_set_save_delay(name, checkpoint, data):
-    with HotGymModel(name, checkpoint, cache) as model:
+def run_set_save_delay(model, data):
+    with model:
         model.set_save_delay(data['save_delay'])
 
 
@@ -107,8 +124,8 @@ async def run_save_models(job):
 
 @worker.func('save_model')
 @prepare()
-def run_set_save_model(name, checkpoint):
-    with HotGymModel(name, checkpoint, cache) as model:
+def run_set_save_model(model):
+    with model:
         model.save()
 
 
@@ -152,7 +169,7 @@ async def run_put_model(job):
 @worker.func('hotgym')
 @prepare(is_json=True)
 @run_on_executer
-def run_hotgym(name, checkpoint, data):
+def run_hotgym(model, data):
     if not isinstance(data, dict):
         return None
 
@@ -162,7 +179,7 @@ def run_hotgym(name, checkpoint, data):
 
     timestamp = data.get('timestamp', int(time.time()))
 
-    with HotGymModel(name, checkpoint, cache) as model:
+    with model:
         v = model.run(timestamp, float(consumption))
         if v:
             data.update(v)

@@ -43,7 +43,7 @@ class BaseModel(object):
         return True
 
     def prepare_save(self):
-        saved = {'module_name': self.module_name}
+        saved = {'model_name': self.model_name}
 
         for key in self.save_keys:
             val = getattr(self, key, None)
@@ -54,6 +54,7 @@ class BaseModel(object):
     def save(self):
         self.last_save_time = time.time()
         self.checkpoint.save(self.prepare_save())
+        self.checkpoint.set_model_name(self.model_name)
 
     def auto_save(self):
         if self.last_save_time + self.save_delay < time.time():
