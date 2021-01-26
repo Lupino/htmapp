@@ -27,7 +27,7 @@ def fixed_module_name(module_name):
 
 
 def start(module_name, argv, process_id=None):
-    logger.info('Start running module {}'.format(module_name))
+    logger.info('Start running module {} {}'.format(module_name, process_id))
     module = import_module(fixed_module_name(module_name))
 
     if process_id is not None:
@@ -48,7 +48,7 @@ def start(module_name, argv, process_id=None):
             loop.run_until_complete(task)
     else:
         module.main(*argv)
-    logger.info('Finish running module {}'.format(module_name))
+    logger.info('Finish running module {} {}'.format(module_name, process_id))
 
 
 def main(script, *argv):
