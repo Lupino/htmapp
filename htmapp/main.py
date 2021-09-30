@@ -84,7 +84,7 @@ def prepare(is_json=False):
 def run_on_executer(func):
     async def _run_on_executer(*args, **kwargs):
         if executor:
-            loop = worker.loop
+            loop = asyncio.get_running_loop()
             task = loop.run_in_executor(executor, func, *args, **kwargs)
             await asyncio.wait([task])
             return task.result()
@@ -254,4 +254,4 @@ async def main(args):
     worker.set_enable_tasks(args.enabled_tasks)
 
     await worker.connect(open_connection, args.periodic_port)
-    worker.work(args.size)
+    await worker.work(args.size)
