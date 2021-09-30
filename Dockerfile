@@ -9,6 +9,6 @@ WORKDIR /app
 
 ENV SYSTEM_PYTHON TRUE
 
-ENTRYPOINT ["/app/run.sh"]
+ENTRYPOINT ["python3", "/app/script.py"]
 
 CMD ["htmapp/main.py"]
