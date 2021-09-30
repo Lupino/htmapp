@@ -100,8 +100,18 @@ def main(script, *argv):
             p.start()
             processes.append(p)
 
+        running = True
+        while running:
+            for p in processes:
+                p.join(10)
+                if not p.is_alive():
+                    running = False
+                    break
         for p in processes:
-            p.join()
+            p.terminate()
+            p.join(10)
+            if p.is_alive():
+                p.kill()
     else:
         start(args.module_name, module_argv)
 
