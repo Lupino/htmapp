@@ -34,13 +34,15 @@ async def main(args):
     hr = await get_nodes(client)
     metric_name = 'test'
     func = hr.get_node(metric_name)
+    if not func:
+        func = '{}'
 
     await client.run_job(func.format('reset_model'), 'test')
 
     async def submit(data):
-        name = '{name}{timestamp}{value}'.format(**data)
+        name = '{name}{timestamp}{consumption}'.format(**data)
         try:
-            v = await client.run_job(func.format('hotgym'),
+            v = await client.run_job(func.format('run_model'),
                                      name,
                                      bytes(json.dumps(data), 'utf-8'),
                                      timeout=30)
@@ -77,5 +79,5 @@ async def main(args):
             'name': metric_name,
             'timestamp': dateString.timestamp(),
             'model_name': 'hotgym',
-            'value': consumption
+            'consumption': consumption
         })

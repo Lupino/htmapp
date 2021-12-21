@@ -1,6 +1,6 @@
 from .checkpoint import CheckPoint
 from .cache import Cache, CacheItem
-from aio_periodic import Worker, open_connection
+from aio_periodic import Worker, open_connection, rsp
 import time
 import os
 import os.path
@@ -32,34 +32,29 @@ def prepare(is_json=False):
         async def __prepare(job):
             name = job.name
             data = job.workload
+            new_model_name = None
 
             if is_json:
-                data = str(data, 'utf-8')
+                data = job.workload_json
+                name = data.pop('name', None)
+                new_model_name = data.pop('model_name', 'hotgym')
 
-            if is_json:
-                try:
-                    data = json.loads(data)
-                    name = data.get('name', job.name)
-                except Exception:
-                    pass
 
             checkpoint = CheckPoint(os.path.join(cache.checkpoint_root, name))
 
             model_name = checkpoint.get_model_name()
-            if not model_name and isinstance(data, dict):
-                model_name = data.get('model_name', 'hotgym')
+            if not model_name and new_model_name:
+                model_name = new_model_name
 
             if not model_name:
-                await job.done(json.dumps({'err': 'model not found.'}))
-                return
+                return rsp.json({'err': 'model not found.'})
 
             checkpoint.set_default_parameters(parameters.get(model_name, {}))
 
             Model = BaseModel.get(model_name)
 
             if not Model:
-                await job.done(json.dumps({'err': 'model not found.'}))
-                return
+                return rsp.json({'err': 'model not found.'})
 
             model = Model(name, checkpoint, cache)
 
@@ -74,7 +69,7 @@ def prepare(is_json=False):
             else:
                 retval = func(*args)
 
-            await job.done(json.dumps(retval))
+            return rsp.json(retval)
 
         return __prepare
 
@@ -165,21 +160,15 @@ async def run_put_model(job):
     await job.done()
 
 
-@worker.func('hotgym')
+@worker.func('run_model')
 @prepare(is_json=True)
 @run_on_executer
-def run_hotgym(model, data):
+def run_model(model, data):
     if not isinstance(data, dict):
         return None
 
-    consumption = data.get('value')
-    if consumption is None:
-        return data
-
-    timestamp = data.get('timestamp', int(time.time()))
-
     with model:
-        v = model.run(timestamp, float(consumption))
+        v = model.run(**data)
         if v:
             data.update(v)
 

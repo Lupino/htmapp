@@ -32,6 +32,27 @@ hotgym_parameters = {
     },
 }
 
+simhash_parameters = {
+    'encoder': {
+        'size': 600,
+        'sparsity': 0.2
+    },
+    'sp': {
+        'potentialRadius': 16,
+        'boostStrength': 0,
+        'columnDimensions': 1600,
+        'dutyCyclePeriod': 1000,
+        'localAreaDensity': 0.02,
+        'minPctOverlapDutyCycle': 0.001,
+        'potentialPct': 0.5,
+        'stimulusThreshold': 0,
+        'synPermActiveInc': 0.1,
+        'synPermConnected': 0.1,
+        'synPermInactiveDec': 0.01
+    }
+}
+
 parameters = {
     "hotgym": hotgym_parameters,
+    "simhash": simhash_parameters,
 }

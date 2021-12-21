@@ -78,7 +78,13 @@ class Model(BaseModel):
         self.createEncoder()
         return BaseModel.prepare(self, model)
 
-    def run(self, timestamp, consumption):
+    def run(self, timestamp=None, consumption=None):
+        if not consumption:
+            return None
+
+        if not timestamp:
+            timestamp = int(time())
+
         # Call the encoders to create bit representations for each value.
         # These are SDR objects.
         dateString = datetime.fromtimestamp(timestamp)

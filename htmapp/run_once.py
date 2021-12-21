@@ -5,6 +5,7 @@ from .base_model import BaseModel
 from config import parameters
 import os.path
 import argparse
+import json
 
 import logging
 
@@ -16,19 +17,6 @@ cache = Cache()
 def parse_args(argv):
     parser = argparse.ArgumentParser(description='Htmapp run_once.',
                                      prog=__name__)
-    parser.add_argument('-H',
-                        '--periodic_port',
-                        dest='periodic_port',
-                        default='tcp://:5000',
-                        type=str,
-                        help='Periodicd host')
-
-    parser.add_argument('-t',
-                        '--timestamp',
-                        dest='timestamp',
-                        default=0,
-                        type=int,
-                        help='Timestamp of metric')
 
     parser.add_argument('--checkpoint',
                         dest='checkpoint',
@@ -44,7 +32,7 @@ def parse_args(argv):
                         help='Htmapp model.')
 
     parser.add_argument('metric', help='Metric name')
-    parser.add_argument('value', type=float, help='Metric value')
+    parser.add_argument('data', help='Metric data')
 
     args = parser.parse_args(argv)
     return args
@@ -54,7 +42,6 @@ def main(args):
     BaseModel.load_models()
 
     checkpoint = CheckPoint(os.path.join(args.checkpoint, args.metric))
-    checkpoint.set_default_parameters(parameters)
 
     model_name = checkpoint.get_model_name()
 
@@ -66,18 +53,17 @@ def main(args):
             model_name, args.model))
         return
 
+    checkpoint.set_default_parameters(parameters[model_name])
+
     Model = BaseModel.get(model_name)
 
     if not Model:
         logger.error('Model {} not found.'.format(model_name))
         return
 
-    timestamp = args.timestamp
-
-    if timestamp == 0:
-        timestamp = int(time.time())
+    data = json.loads(args.data)
 
     with Model(args.metric, checkpoint, cache) as model:
-        v = model.run(timestamp, args.value)
+        v = model.run(**data)
         print(v)
         model.save()
