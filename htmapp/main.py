@@ -44,16 +44,16 @@ def prepare(is_json=False):
                     pass
 
             checkpoint = CheckPoint(os.path.join(cache.checkpoint_root, name))
-            checkpoint.set_default_parameters(parameters)
 
             model_name = checkpoint.get_model_name()
-
             if not model_name and isinstance(data, dict):
                 model_name = data.get('model_name', 'hotgym')
 
             if not model_name:
                 await job.done(json.dumps({'err': 'model not found.'}))
                 return
+
+            checkpoint.set_default_parameters(parameters.get(model_name, {}))
 
             Model = BaseModel.get(model_name)
 

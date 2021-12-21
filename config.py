@@ -1,4 +1,4 @@
-parameters = {
+hotgym_parameters = {
     'enc': {
         "value": {
             'resolution': 0.88,
@@ -30,4 +30,8 @@ parameters = {
         'permanenceDec': 0.1,
         'permanenceInc': 0.1
     },
+}
+
+parameters = {
+    "hotgym": hotgym_parameters,
 }
