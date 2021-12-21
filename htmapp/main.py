@@ -36,7 +36,7 @@ def prepare(is_json=False):
 
             if is_json:
                 data = job.workload_json
-                name = data.pop('name', None)
+                name = data.pop('name', name)
                 new_model_name = data.pop('model_name', 'hotgym')
 
 
@@ -160,7 +160,14 @@ async def run_put_model(job):
     await job.done()
 
 
-@worker.func('run_model')
+def get_locker(job):
+    name = job.name
+    data = job.workload_json
+    name = data.pop('name', name)
+    return name, 1
+
+
+@worker.func('run_model', locker=get_locker)
 @prepare(is_json=True)
 @run_on_executer
 def run_model(model, data):
