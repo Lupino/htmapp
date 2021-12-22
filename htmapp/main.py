@@ -1,7 +1,6 @@
 from .checkpoint import CheckPoint
 from .cache import Cache, CacheItem
 from aio_periodic import Worker, open_connection, rsp
-import time
 import os
 import os.path
 import argparse
@@ -9,11 +8,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import pickle
 from .base_model import BaseModel
-
-import json
-
 from config import parameters
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,8 +16,6 @@ logger = logging.getLogger(__name__)
 cache = Cache()
 
 worker = Worker()
-
-run_forever = True
 
 executor = None
 
@@ -38,7 +31,6 @@ def prepare(is_json=False):
                 data = job.workload_json
                 name = data.pop('name', name)
                 new_model_name = data.pop('model_name', 'hotgym')
-
 
             checkpoint = CheckPoint(os.path.join(cache.checkpoint_root, name))
 

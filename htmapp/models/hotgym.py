@@ -4,6 +4,7 @@ from htm.encoders.rdse import RDSE, RDSE_Parameters
 from htm.encoders.date import DateEncoder
 from htm.bindings.algorithms import SpatialPooler
 from htm.bindings.algorithms import TemporalMemory
+from time import time
 
 from ..base_model import BaseModel
 

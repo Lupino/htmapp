@@ -2,8 +2,6 @@ from htm.encoders.simhash_document_encoder import SimHashDocumentEncoder, \
         SimHashDocumentEncoderParameters
 from htm.algorithms import SpatialPooler, Classifier
 from htm.bindings.sdr import SDR
-import sys
-import random
 import re
 
 from ..base_model import BaseModel
@@ -55,7 +53,8 @@ class Model(BaseModel):
             dutyCyclePeriod=int(round(parameters['sp']['dutyCyclePeriod'])),
             boostStrength=parameters['sp']['boostStrength'],
             seed=0,
-            # this is important, 0="random" seed which changes on each invocation
+            # this is important, 0="random" seed
+            # which changes on each invocation
             spVerbosity=99,
             wrapAround=True)
 

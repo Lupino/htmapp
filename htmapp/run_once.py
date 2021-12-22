@@ -1,4 +1,3 @@
-import time
 from .checkpoint import CheckPoint
 from .cache import Cache
 from .base_model import BaseModel
