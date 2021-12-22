@@ -46,7 +46,7 @@ if [ -z "$1" ]; then
     ${PYTHON}
 elif [ "$1" == "cli" ]; then
     shift
-    ${PYTHON} script.py htmapp/cli.py "$@"
+    ${PYTHON} run.py htmapp/cli.py "$@"
 else
-    ${PYTHON} script.py "$@"
+    ${PYTHON} run.py "$@"
 fi
