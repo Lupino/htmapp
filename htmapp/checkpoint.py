@@ -123,6 +123,7 @@ class CheckPoint(object):
         if not os.path.isfile(path):
             return None
 
+        logger.info('Load checkpoint: {}'.format(path))
         try:
             with open(path, 'rb') as f:
                 data = f.read()
