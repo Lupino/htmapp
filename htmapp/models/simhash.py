@@ -65,7 +65,7 @@ class Model(BaseModel):
         self.sdrc = sdrc
         self.targets = []
 
-    def run(self, doc, target=None):
+    def run(self, doc, target=None, only_learn=False):
         # Call the encoders to create bit representations for each value.
         # These are SDR objects.
         doc = re_spec_code.sub(' ', doc)
@@ -78,12 +78,14 @@ class Model(BaseModel):
         # Spatial Pooler.
         activeColumns = SDR(self.sp.getColumnDimensions())
 
-        # Execute Spatial Pooling algorithm over input space.
-        self.sp.compute(encoding, False, activeColumns)
+        infers = []
+        if not only_learn:
+            # Execute Spatial Pooling algorithm over input space.
+            self.sp.compute(encoding, False, activeColumns)
 
-        infer = self.sdrc.infer(activeColumns)
-        infers = list(zip(self.targets, infer))
-        infers.sort(key=lambda x: x[1], reverse=True)
+            infer = self.sdrc.infer(activeColumns)
+            infers = list(zip(self.targets, infer))
+            infers.sort(key=lambda x: x[1], reverse=True)
 
         if target:
             if target not in self.targets:
