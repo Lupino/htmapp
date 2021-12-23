@@ -19,7 +19,7 @@ class BaseModel(object):
         self.initialized = False
         self.checkpoint = checkpoint
         self.last_save_time = 0
-        self.save_delay = 300  # 超过一定时间，自动保存 model
+        self.save_delay = 0  # 超过一定时间，自动保存 model
         self._cache = cache
         self._cache_item = None
 
@@ -57,6 +57,9 @@ class BaseModel(object):
         self.checkpoint.set_model_name(self.model_name)
 
     def auto_save(self):
+        if self.save_delay == 0:
+            return
+
         if self.last_save_time + self.save_delay < time.time():
             self.save()
 
