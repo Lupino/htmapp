@@ -4,15 +4,11 @@ from time import time
 import glob
 import pickle
 import json
+import gzip
 
 import logging
 
 logger = logging.getLogger(__name__)
-
-try:
-    import snappy
-except Exception:
-    snappy = None
 
 
 def safe_float(v):
@@ -23,17 +19,13 @@ def safe_float(v):
 
 
 class CheckPoint(object):
-    def __init__(self, checkpoint, generation=2, compress=True):
+    def __init__(self, checkpoint, generation=2):
         self.checkpoint = checkpoint
         self.checkpoint_path = os.path.join(self.checkpoint, 'checkpoint')
         if not os.path.isdir(checkpoint):
             os.makedirs(checkpoint)
 
         self.generation = generation
-
-        self.compress = compress
-        if snappy is None:
-            self.compress = False
 
     def _get_checkpoint(self):
         if not os.path.isfile(self.checkpoint_path):
@@ -106,11 +98,10 @@ class CheckPoint(object):
         checkpoint = self._new_checkpoint()
         path = os.path.join(self.checkpoint, checkpoint)
         logger.info('Save checkpoint: {}'.format(path))
-        with open(path, 'wb') as f:
+        with gzip.GzipFile(path, 'wb') as f:
             data = pickle.dumps(obj)
-            if self.compress:
-                data = snappy.compress(data)
             f.write(data)
+
         self._write_checkpoint(checkpoint)
         self.remove_old_file()
 
@@ -125,10 +116,8 @@ class CheckPoint(object):
 
         logger.info('Load checkpoint: {}'.format(path))
         try:
-            with open(path, 'rb') as f:
+            with gzip.GzipFile(path, 'rb') as f:
                 data = f.read()
-                if self.compress:
-                    data = snappy.uncompress(data)
                 return pickle.loads(data)
         except Exception:
             return None
