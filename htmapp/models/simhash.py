@@ -6,7 +6,7 @@ import re
 
 from ..base_model import BaseModel
 
-re_spec_code = re.compile(r'[ /{}\[\]\(\).,=+-]+')
+re_spec_code = re.compile(r'[ /{}\[\]\(\).,=+-:]+')
 
 
 class Model(BaseModel):
@@ -65,13 +65,13 @@ class Model(BaseModel):
         self.sdrc = sdrc
         self.targets = []
 
-    def run(self, doc, target=None, only_learn=False):
+    def run(self, source, target=None, only_learn=False):
         # Call the encoders to create bit representations for each value.
         # These are SDR objects.
-        doc = re_spec_code.sub(' ', doc)
-        doc = doc.strip().lower()
+        source = re_spec_code.sub(' ', source)
+        source = source.strip().lower()
 
-        encoding = self.encoder.encode(doc)
+        encoding = self.encoder.encode(source)
 
         # Create an SDR to represent active columns, This will be populated by
         # the compute method below. It must have the same dimensions as the
