@@ -1,7 +1,7 @@
 from .checkpoint import CheckPoint
 from .cache import Cache
 from .base_model import BaseModel
-from config import parameters
+from .config import parameters
 import os.path
 import argparse
 import json

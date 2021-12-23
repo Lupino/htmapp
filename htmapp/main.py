@@ -8,7 +8,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import pickle
 from .base_model import BaseModel
-from config import parameters
+from .config import parameters
 import logging
 
 logger = logging.getLogger(__name__)
