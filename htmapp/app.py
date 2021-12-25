@@ -40,13 +40,7 @@ def prepare(is_json=False):
                 return rsp.json({'err': 'model not found.'})
 
             model = Model(name, checkpoint, cache)
-
-            args = [model]
-
-            if is_json:
-                args.append(data)
-
-            return rsp.done(func(*args))
+            return rsp.done(func(model, data))
 
         return __prepare
 
@@ -82,7 +76,7 @@ def run_save_models(job):
 
 @app.func('save_model')
 @prepare()
-def run_set_save_model(model):
+def run_set_save_model(model, data):
     with model:
         model.save()
 
