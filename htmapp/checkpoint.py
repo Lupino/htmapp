@@ -5,7 +5,7 @@ import glob
 import pickle
 import json
 import gzip
-
+from multiprocessing import Process
 import logging
 
 logger = logging.getLogger(__name__)
@@ -94,13 +94,19 @@ class CheckPoint(object):
             if os.path.isfile(fn):
                 os.remove(fn)
 
+    def gzip_save(self, path, data):
+        with gzip.GzipFile(path, 'wb') as f:
+            f.write(data)
+
     def save(self, obj):
         checkpoint = self._new_checkpoint()
         path = os.path.join(self.checkpoint, checkpoint)
+        data = pickle.dumps(obj)
         logger.info('Save checkpoint: {}'.format(path))
-        with gzip.GzipFile(path, 'wb') as f:
-            data = pickle.dumps(obj)
-            f.write(data)
+
+        p = Process(target=self.gzip_save, args=(path, data))
+        p.start()
+        p.join()
 
         self._write_checkpoint(checkpoint)
         self.remove_old_file()

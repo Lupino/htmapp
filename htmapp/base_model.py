@@ -54,7 +54,6 @@ class BaseModel(object):
     def save(self):
         self.last_save_time = time.time()
         self.checkpoint.save(self.prepare_save())
-        self.checkpoint.set_model_name(self.model_name)
 
     def auto_save(self):
         if self.save_delay == 0:
@@ -87,12 +86,22 @@ class BaseModel(object):
         if not self.initialized:
             if not self.load():
                 self.create()
+                self.checkpoint.set_model_name(self.model_name)
+                if self._cache:
+                    self._cache_item = CacheItem(self.name,
+                                                 self.prepare_save())
+                    self._cache.set(self._cache_item)
+
                 self.initialized = True
 
         return self.initialized
 
     def run(self, *args, **kwargs):
         raise NotImplementedError("you must rewrite at sub class")
+
+    @classmethod
+    def is_train(cls, *args, **kwargs):
+        return True
 
     def __enter__(self):
         if not self.initialize():

@@ -14,7 +14,8 @@ async def after_stop(module):
     if cache:
         cache.save_items()
 
+
 if __name__ == '__main__':
-    formatter = "[%(asctime)s] %(name)s {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"
+    formatter = "[%(asctime)s] %(name)s:%(lineno)d %(levelname)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=formatter)
     run.main(*sys.argv)

@@ -19,7 +19,6 @@ class Model(BaseModel):
 
     def create(self):
         parameters = self.checkpoint.get_parameters()
-        print(parameters)
 
         # Make the Encoders.
         encoderParameters = SimHashDocumentEncoderParameters()
@@ -64,6 +63,12 @@ class Model(BaseModel):
         self.sp = sp
         self.sdrc = sdrc
         self.targets = []
+
+    @classmethod
+    def is_train(self, *, target=None, **kwargs):
+        if target:
+            return True
+        return False
 
     def run(self, source, target=None, only_learn=False):
         # Call the encoders to create bit representations for each value.
