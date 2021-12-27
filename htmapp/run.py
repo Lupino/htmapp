@@ -98,6 +98,8 @@ def run(module, *argv):
 
 
 def start(module_name, argv, process_id=None):
+    formatter = "[%(asctime)s] %(name)s:%(lineno)d %(levelname)s - %(message)s"
+    logging.basicConfig(level=logging.INFO, format=formatter)
     module_log = f'running module {module_name} {" ".join(argv)}'
     logger.info(f'Start {module_log}')
     module = import_module(fixed_module_name(module_name))
@@ -186,6 +188,4 @@ def main(script, *argv):
 
 
 if __name__ == '__main__':
-    formatter = "[%(asctime)s] %(name)s:%(lineno)d %(levelname)s - %(message)s"
-    logging.basicConfig(level=logging.INFO, format=formatter)
     main(*sys.argv)
