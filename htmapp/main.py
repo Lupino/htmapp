@@ -65,8 +65,6 @@ async def main(args):
     if 'PROCESS_ID' in os.environ:
         if subfix.find('{}') > -1:
             subfix = subfix.format(os.environ['PROCESS_ID'])
-        else:
-            subfix += '_{}'.format(os.environ['PROCESS_ID'])
 
     worker.set_prefix(args.prefix)
     worker.set_subfix(subfix)
