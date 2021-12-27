@@ -6,9 +6,13 @@ def get_prefix_subfix(func):
     return prefix + '{}' + subfix
 
 
+def is_func(k):
+    return k.find('run_model') > -1
+
+
 async def get_nodes(client):
     st = await client.status()
-    funcs = [get_prefix_subfix(k) for k in st.keys() if k.find('run_model') > -1]
+    funcs = [get_prefix_subfix(k) for k in st.keys() if is_func(k)]
     hr = HashRing(funcs, hash_fn='ketama')
     return hr
 
