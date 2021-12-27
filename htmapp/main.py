@@ -69,7 +69,7 @@ async def main(args):
     worker.set_prefix(args.prefix)
     worker.set_subfix(subfix)
     worker.set_enable_tasks(args.enabled_tasks)
-    executor = ThreadPoolExecutor(args.size)
+    executor = ThreadPoolExecutor(args.size * 2)
     worker.set_executor(executor)
 
     await worker.connect(open_connection, args.periodic_port)
