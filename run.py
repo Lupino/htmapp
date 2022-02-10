@@ -1,14 +1,14 @@
 import sys
 import logging
-from htmapp import run
+import runner
 
 
-@run.before_start
+@runner.before_start
 async def before_start(module):
     pass
 
 
-@run.after_stop
+@runner.after_stop
 async def after_stop(module):
     cache = getattr(module, 'cache', None)
     if cache:
@@ -18,4 +18,4 @@ async def after_stop(module):
 if __name__ == '__main__':
     formatter = "[%(asctime)s] %(name)s:%(lineno)d %(levelname)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=formatter)
-    run.main(*sys.argv)
+    runner.main(*sys.argv)
